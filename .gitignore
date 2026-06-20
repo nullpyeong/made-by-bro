@@ -34,6 +34,3 @@ desktop.ini
 _*.py
 _*.html
 _*.png
-
-# 내부 전략/리포트 (커밋 금지 — 나만 보는 작업 문서)
-REPORT/
