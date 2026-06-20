@@ -20,6 +20,7 @@ made-by-bro/
 ├─ packages/
 │  └─ shared/         # 프론트·백 공유 타입(DTO 등)
 ├─ design-docs/       # 설계문서·DB 스키마·ERD (서비스에 노출 X)
+├─ team-docs/         # 운영·의사결정 문서(TEAMDOC) — 8개 파트 + ADR 로그
 └─ SETUP.md           # 개발 환경 셋업 가이드
 ```
 
