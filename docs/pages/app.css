@@ -635,8 +635,9 @@ body::after{content:"";position:fixed;top:-22%;left:50%;transform:translateX(-50
   text-align:left;max-width:1180px;margin:0 auto;padding:var(--sp-16) 24px var(--sp-12)}
 .hero-learning::before{display:none}
 .hl-copy .eyebrow{margin-bottom:20px}
-.hero-learning h1{font-size:clamp(2.4rem,5.2vw,4rem);font-weight:var(--w-black);letter-spacing:-.035em;line-height:1.12;
+.hero-learning h1{font-size:clamp(2.2rem,4vw,3.5rem);font-weight:var(--w-black);letter-spacing:-.035em;line-height:1.14;
   margin:0 0 20px;word-break:keep-all}
+@media(min-width:861px){.hero-learning h1 .ln{white-space:nowrap}}
 .hero-learning .sub{color:var(--color-text-muted);font-size:clamp(1.02rem,1.5vw,1.15rem);line-height:1.62;
   max-width:40ch;margin:0 0 var(--sp-6);word-break:keep-all}
 .hero-learning .hero-cta{justify-content:flex-start;margin-top:0}
