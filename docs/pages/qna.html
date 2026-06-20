@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Q&A · EPIC</title>
+<link rel="stylesheet" href="../design/tokens.css?v=35">
+<link rel="stylesheet" href="app.css?v=35">
+<script>(function(){try{if(localStorage.getItem('epic-reset3')!=='1'){localStorage.removeItem('epic-theme');localStorage.removeItem('epic-theme-v2');localStorage.setItem('epic-reset3','1');}var t=localStorage.getItem('epic-theme-v2');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+</head>
+<body>
+<div class="gnb"><div class="inner">
+  <a class="logo" href="home.html"><span class="ico mark"><svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M9 7.3v9.4l7.2-4.7z"/></svg></span><span class="wm"><b>EPIC<em>.</em></b><i>에픽영어교습소</i></span></a>
+  <nav><a href="home.html">전체강의</a><a href="qna.html">Q&A</a></nav>
+  <input class="search" placeholder="강의 검색">
+  <div class="right"><button class="theme-toggle" data-act="theme" aria-label="다크모드 전환"><span class="moon"><i class="icn icn-moon"></i></span><span class="sun"><i class="icn icn-sun"></i></span></button><a class="cartnav" href="cart.html" data-cartnav aria-label="장바구니"><i class="icn icn-cart"></i><span class="cc" data-cartcount-badge hidden>0</span></a><a class="bell" href="mypage.html"><i class="icn icn-bell"></i><span class="dot"></span></a><a href="mypage.html">마이페이지</a></div>
+</div></div>
+
+<div class="container section">
+  <div class="section-h"><div class="lead"><span class="kicker">◇ 묻고 답하기</span><h2>강의 질문 (Q&A)</h2></div><button class="btn btn-grad btn-sm" data-act="toast" data-msg="질문 작성 폼을 엽니다">＋ 질문 작성</button></div>
+
+  <!-- 답변 현황 요약 -->
+  <div class="kpis" style="grid-template-columns:repeat(3,1fr);margin-bottom:22px">
+    <div class="kpi"><span class="accentbar"></span><div class="top"><span class="ic"><i class="icn icn-message"></i></span></div><div class="lb">누적 질문</div><div class="val">1,284</div><div class="sub">현직 강사 직접 답변</div></div>
+    <div class="kpi green"><span class="accentbar"></span><div class="top"><span class="ic"><i class="icn icn-check"></i></span></div><div class="lb">답변 완료율</div><div class="val">98<small>%</small></div><div class="sub"><span class="trend">평균 4시간</span> 내 답변</div></div>
+    <div class="kpi amber"><span class="accentbar"></span><div class="top"><span class="ic"><i class="icn icn-hourglass"></i></span></div><div class="lb">미답변</div><div class="val">12</div><div class="sub">순차 답변 중</div></div>
+  </div>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:20px">
+    <div class="chip-group" style="display:flex;gap:8px"><span class="chip on">전체</span><span class="chip">미답변</span><span class="chip">내 질문</span></div>
+    <div class="segment"><button class="seg on">최신순</button><button class="seg">답변순</button><button class="seg">인기순</button></div>
+  </div>
+
+  <div class="card flat" style="padding:18px;margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px"><div style="font-weight:700;font-size:14.5px">"Can I ask a question?" 와 "May I ask a question?" 차이가 뭔가요?</div><span class="badge green">답변완료</span></div>
+    <div class="muted" style="font-size:12.5px;margin:4px 0 12px">2-1. 교실에서 선생님께 질문하기 · 박지민 · 2일 전</div>
+    <div style="background:var(--color-surface-alt);border-radius:var(--radius-md);padding:13px;font-size:13px"><b style="color:var(--color-primary)">김하영 원장</b> · 둘 다 정중한 표현이에요. May가 조금 더 격식 있는 느낌이라 선생님께는 둘 다 좋고, 친구 사이엔 Can을 더 자주 써요.</div>
+    <div style="display:flex;gap:16px;margin-top:11px;font-size:12px;color:var(--color-text-muted)"><button class="badge gray" data-act="toast" data-msg="도움돼요에 반응했습니다" style="border:none;cursor:pointer"><i class="icn icn-thumbsup"></i> 도움돼요 24</button><span style="display:inline-flex;align-items:center;gap:5px"><i class="icn icn-eye"></i> 312 조회</span></div>
+  </div>
+  <div class="card flat" style="padding:18px;margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px"><div style="font-weight:700;font-size:14.5px">2강 자료(PDF) 다운로드가 안 돼요</div><span class="badge accent">미답변</span></div>
+    <div class="muted" style="font-size:12.5px;margin-top:4px">2-2. 좋아하는 과목·취미 말하기 · 이서윤 · 5시간 전</div>
+  </div>
+  <div class="card flat" style="padding:18px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px"><div style="font-weight:700;font-size:14.5px">중간 퀴즈 답을 틀리면 다시 못 보나요?</div><span class="badge green">답변완료</span></div>
+    <div class="muted" style="font-size:12.5px;margin:4px 0 12px">1-2. 친구에게 인사하는 말 10가지 · 정하준 · 1주 전</div>
+    <div style="background:var(--color-surface-alt);border-radius:var(--radius-md);padding:13px;font-size:13px"><b style="color:var(--color-primary)">김하영 원장</b> · 다시 시도할 수 있으며, 정답을 맞히면 이어서 재생됩니다.</div>
+  </div>
+</div>
+
+<div class="foot"><div class="inner"><span><b style="color:var(--color-text)">EPIC 에픽영어교습소</b></span><span>이용약관 · 환불정책 · 고객센터</span></div></div>
+<script src="app.js?v=35"></script>
+</body>
+</html>

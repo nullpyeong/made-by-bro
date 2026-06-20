@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>로그인 · EPIC</title>
+<link rel="stylesheet" href="../design/tokens.css?v=35">
+<link rel="stylesheet" href="app.css?v=35">
+<script>(function(){try{if(localStorage.getItem('epic-reset3')!=='1'){localStorage.removeItem('epic-theme');localStorage.removeItem('epic-theme-v2');localStorage.setItem('epic-reset3','1');}var t=localStorage.getItem('epic-theme-v2');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+</head>
+<body>
+<div class="gnb"><div class="inner">
+  <a class="logo" href="home.html"><span class="ico mark"><svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M9 7.3v9.4l7.2-4.7z"/></svg></span><span class="wm"><b>EPIC<em>.</em></b><i>에픽영어교습소</i></span></a>
+  <div class="right"><a href="home.html">홈으로</a></div>
+</div></div>
+
+<div class="auth">
+  <!-- 좌: 브랜드 패널 -->
+  <div class="brandside">
+    <div class="bz">
+      <div style="font-weight:900;font-size:22px;letter-spacing:-.02em">EPIC<span style="opacity:.7">.</span></div>
+      <div style="font-size:11px;letter-spacing:.18em;opacity:.8;margin-top:2px">EVERY PERSON IS CURIOUS</div>
+    </div>
+    <div class="bz">
+      <h2>오늘도 한 걸음,<br>영어가 트이는 30일.</h2>
+      <p>매일 10분, 구간 퀴즈와 완청 인증으로 끝까지 완주하는 초·중등 영어 인강.</p>
+      <div class="pts">
+        <div class="pt"><span class="ck"><i class="icn icn-check"></i></span> 13강 · 모바일·PC 무제한 수강</div>
+        <div class="pt"><span class="ck"><i class="icn icn-check"></i></span> 1:1 강사 Q&A + 수료증 발급</div>
+        <div class="pt"><span class="ck"><i class="icn icn-check"></i></span> 7일 이내 미수강 시 100% 환불</div>
+      </div>
+    </div>
+    <div class="qt">"부담 없는 분량이라 처음으로 끝까지 완주했어요."<br><span style="opacity:.8">— 홍**, 데일리 영어회화 수강생</span></div>
+  </div>
+
+  <!-- 우: 폼 -->
+  <div class="formside">
+    <div class="formbox">
+      <div style="margin-bottom:22px"><h2 style="font-size:22px;font-weight:800">다시 오셨네요</h2><p class="muted" style="font-size:13.5px;margin-top:5px">로그인하고 학습을 이어가세요</p></div>
+      <div class="field"><label>이메일</label><input class="input" placeholder="you@email.com"></div>
+      <div class="field"><label>비밀번호</label><input class="input" type="password" placeholder="••••••••"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;margin-bottom:18px">
+        <label class="muted" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox"> 로그인 유지</label>
+        <a class="muted" href="#" data-act="toast" data-msg="비밀번호 재설정 메일을 보냈습니다" style="text-decoration:none">비밀번호 찾기</a>
+      </div>
+      <a class="btn btn-grad btn-block" href="home.html" style="margin-bottom:10px">로그인 <span class="arr">→</span></a>
+      <div class="divider-or">또는</div>
+      <button style="width:100%;background:#fee500;color:#3c1e1e;border:none;text-align:center;padding:13px;border-radius:var(--radius-pill);font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit;transition:transform .15s ease" data-act="toast" data-msg="카카오 로그인 연동 (프로토타입)" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''"><i class="icn icn-message"></i> 카카오로 3초 만에 시작</button>
+      <div class="center muted" style="font-size:12.5px;margin-top:20px">아직 회원이 아니신가요? <a href="#" data-act="toast" data-msg="회원가입 화면으로 (프로토타입)" style="color:var(--color-primary);font-weight:700;text-decoration:none">이메일로 회원가입</a></div>
+    </div>
+  </div>
+</div>
+<script src="app.js?v=35"></script>
+</body>
+</html>

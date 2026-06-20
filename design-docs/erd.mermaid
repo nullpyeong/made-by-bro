@@ -1,0 +1,261 @@
+erDiagram
+    users ||--o{ enrollments : "수강"
+    users ||--o{ payments : "결제"
+    users ||--o{ progress : "진도"
+    users ||--o{ bookmarks : "북마크"
+    users ||--o{ reviews : "수강평"
+    users ||--o{ qna : "질문"
+    users ||--o{ coupon_redemptions : "쿠폰사용"
+    users ||--o{ courses : "강사(instructor)"
+
+    categories ||--o{ courses : "분류"
+
+    courses ||--o{ sections : "구성"
+    courses ||--o{ enrollments : "수강대상"
+    courses ||--o{ payments : "구매대상"
+    courses ||--o{ reviews : "리뷰대상"
+    courses ||--o{ qna : "질문대상"
+
+    sections ||--o{ lectures : "포함"
+
+    lectures ||--o{ attachments : "자료(PDF)"
+    lectures ||--o{ progress : "시청기록"
+    lectures ||--o{ bookmarks : "북마크지점"
+    lectures ||--o{ qna : "관련강의"
+    lectures ||--o{ quizzes : "퀴즈"
+
+    quizzes ||--o{ quiz_attempts : "응답"
+    users ||--o{ quiz_attempts : "응시"
+
+    payments ||--o{ refunds : "환불"
+    users ||--o{ refunds : "환불요청"
+    payments ||--o{ receipts : "영수증"
+    users ||--o{ certificates : "수료증"
+    courses ||--o{ certificates : "수료대상"
+    users ||--o{ user_sessions : "세션"
+    users ||--o{ notifications : "알림"
+    courses ||--o{ announcements : "공지"
+
+    payments ||--o| enrollments : "수강권부여"
+    payments ||--o| coupon_redemptions : "쿠폰적용"
+
+    coupons ||--o{ payments : "할인"
+    coupons ||--o{ coupon_redemptions : "사용이력"
+
+    qna ||--o{ qna : "답글(parent)"
+
+    users {
+        bigint id PK
+        citext email UK
+        varchar password "nullable(카카오전용)"
+        varchar name
+        enum role "student|instructor|admin"
+        varchar kakao_id "nullable"
+        text profile_image
+        timestamptz created_at
+    }
+
+    categories {
+        bigint id PK
+        varchar name
+        varchar slug UK
+    }
+
+    courses {
+        bigint id PK
+        bigint category_id FK
+        bigint instructor_id FK
+        varchar title
+        text description
+        text thumbnail_url
+        int price "KRW"
+        enum status "draft|published|closed"
+    }
+
+    sections {
+        bigint id PK
+        bigint course_id FK
+        varchar title
+        int order_no
+    }
+
+    lectures {
+        bigint id PK
+        bigint section_id FK
+        varchar title
+        varchar video_uid "Stream UID"
+        int duration "초"
+        int order_no
+        bool is_preview
+        bool require_full_watch "완청필수"
+        smallint completion_threshold "완청%"
+        bool disable_seek "빨리감기금지"
+    }
+
+    attachments {
+        bigint id PK
+        bigint lecture_id FK
+        text file_url "S3 key"
+        varchar filename
+        bigint size_bytes
+    }
+
+    enrollments {
+        bigint id PK
+        bigint user_id FK
+        bigint course_id FK
+        bigint payment_id FK
+        enum status "active|expired|cancelled"
+        timestamptz purchased_at
+        timestamptz expires_at "NULL=무제한"
+    }
+
+    progress {
+        bigint id PK
+        bigint user_id FK
+        bigint lecture_id FK
+        int watched_seconds
+        int last_position "이어보기"
+        int covered_seconds "완청판정"
+        jsonb watched_intervals "재생구간"
+        int max_position "빨리감기제한"
+        bool completed "완청시true"
+        timestamptz completed_at
+    }
+
+    quizzes {
+        bigint id PK
+        bigint lecture_id FK
+        enum quiz_type "inline|final"
+        int position_sec "게이팅시점"
+        text question
+        jsonb options
+        jsonb answer
+        bool require_correct "정답시진행"
+        smallint points "배점"
+        int order_no
+    }
+
+    quiz_attempts {
+        bigint id PK
+        bigint user_id FK
+        bigint quiz_id FK
+        jsonb selected "제출답"
+        bool is_correct
+        smallint score
+        timestamptz attempted_at
+    }
+
+    bookmarks {
+        bigint id PK
+        bigint user_id FK
+        bigint lecture_id FK
+        int position_sec
+        varchar label
+    }
+
+    reviews {
+        bigint id PK
+        bigint user_id FK
+        bigint course_id FK
+        smallint rating "1-5"
+        text comment
+    }
+
+    qna {
+        bigint id PK
+        bigint user_id FK
+        bigint course_id FK
+        bigint lecture_id FK "nullable"
+        bigint parent_id FK "답글"
+        varchar title
+        text content
+        bool is_answered
+    }
+
+    coupons {
+        bigint id PK
+        varchar code UK
+        enum discount_type "percent|fixed"
+        int discount_value
+        int min_amount
+        int max_uses "NULL=무제한"
+        int used_count
+        timestamptz valid_until
+    }
+
+    payments {
+        bigint id PK
+        bigint user_id FK
+        bigint course_id FK
+        bigint coupon_id FK
+        int amount "할인후"
+        varchar pg_provider
+        varchar pg_tid UK
+        enum status "pending|paid|failed|refunded"
+        int refund_amount
+        timestamptz paid_at
+    }
+
+    coupon_redemptions {
+        bigint id PK
+        bigint coupon_id FK
+        bigint user_id FK
+        bigint payment_id FK
+    }
+
+    refunds {
+        bigint id PK
+        bigint payment_id FK
+        bigint user_id FK
+        text reason
+        smallint progress_rate "진도율"
+        int refund_amount "비례환불액"
+        enum status
+        timestamptz requested_at
+    }
+
+    receipts {
+        bigint id PK
+        bigint payment_id FK
+        enum receipt_type "현금영수증|세금계산서"
+        varchar identifier "휴대폰|사업자번호"
+        varchar receipt_no
+        enum status
+    }
+
+    certificates {
+        bigint id PK
+        bigint user_id FK
+        bigint course_id FK
+        varchar cert_no UK
+        text pdf_url
+        timestamptz issued_at
+    }
+
+    user_sessions {
+        bigint id PK
+        bigint user_id FK
+        varchar refresh_hash
+        varchar device
+        varchar ip
+        timestamptz last_seen_at
+        timestamptz expires_at
+    }
+
+    notifications {
+        bigint id PK
+        bigint user_id FK
+        varchar type "payment|qna|expiry..."
+        varchar title
+        text body
+        bool is_read
+    }
+
+    announcements {
+        bigint id PK
+        bigint course_id FK "NULL=전체"
+        varchar title
+        text content
+        bool pinned
+    }

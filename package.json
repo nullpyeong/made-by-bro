@@ -1,0 +1,11 @@
+{
+  "name": "made-by-bro",
+  "version": "0.1.0",
+  "private": true,
+  "description": "에픽영어교습소 온라인 인강 사이트 — 동생이 누나 학원을 위해",
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "dev:api": "pnpm --filter api start:dev",
+    "dev:web": "pnpm --filter web dev"
+  }
+}

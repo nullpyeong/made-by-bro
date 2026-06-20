@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>수강 시작 · EPIC</title>
+<link rel="stylesheet" href="../design/tokens.css?v=35">
+<link rel="stylesheet" href="app.css?v=35">
+<script>(function(){try{if(localStorage.getItem('epic-reset3')!=='1'){localStorage.removeItem('epic-theme');localStorage.removeItem('epic-theme-v2');localStorage.setItem('epic-reset3','1');}var t=localStorage.getItem('epic-theme-v2');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+</head>
+<body>
+<div class="gnb"><div class="inner">
+  <a class="logo" href="home.html"><span class="ico mark"><svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M9 7.3v9.4l7.2-4.7z"/></svg></span><span class="wm"><b>EPIC<em>.</em></b><i>에픽영어교습소</i></span></a>
+  <nav><a href="home.html">전체강의</a><a href="qna.html">Q&A</a></nav>
+  <div class="right"><button class="theme-toggle" data-act="theme" aria-label="다크모드 전환"><span class="moon"><i class="icn icn-moon"></i></span><span class="sun"><i class="icn icn-sun"></i></span></button><a href="mypage.html">마이페이지</a></div>
+</div></div>
+
+<div class="container" style="padding-top:32px">
+  <!-- 스텝 인디케이터 (3단계 완료) -->
+  <div class="stepper">
+    <a class="s done" href="cart.html" data-backcart><span class="n"><i class="icn icn-check"></i></span><span class="tx">장바구니</span></a>
+    <span class="ln fill"></span>
+    <span class="s done"><span class="n"><i class="icn icn-check"></i></span><span class="tx">주문/결제</span></span>
+    <span class="ln fill"></span>
+    <span class="s on"><span class="n">3</span><span class="tx">수강 시작</span></span>
+  </div>
+</div>
+
+<div class="container" data-complete style="max-width:660px;padding-bottom:56px">
+  <!-- 성공 히어로 -->
+  <div class="success">
+    <div class="check"><svg viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24"/><path d="M15 27l7.5 7.5L37 19"/></svg></div>
+    <h1>결제가 완료되었어요!</h1>
+    <p class="muted">이제 바로 수강을 시작할 수 있어요.<br>영수증과 수강 안내는 가입 이메일로 보내드렸어요.</p>
+  </div>
+
+  <!-- 주문 요약 -->
+  <div class="card gborder" style="padding:22px;margin-bottom:18px">
+    <div class="ordhead">
+      <span>주문번호</span><b data-co="order">EPIC-20260620-4821</b>
+    </div>
+    <div class="ordprod">
+      <div class="gx-blue" data-co="thumb" style="width:84px;height:55px;border-radius:var(--radius-md);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:11px;letter-spacing:.05em">회화</div>
+      <div style="flex:1"><div style="font-weight:700;font-size:14px" data-co="title">초·중등 데일리 영어회화 30일</div><div class="muted" data-co="sub" style="font-size:12.5px;margin-top:2px">김하영 원장 · 수강기간 90일</div></div>
+    </div>
+    <div class="sumrow"><span class="k" data-co="row1k">상품 금액</span><span data-co="row1v">₩66,000</span></div>
+    <div class="sumrow"><span class="k">결제수단</span><span>신용·체크카드</span></div>
+    <div class="sumrow total"><span data-co="totalk">결제 완료</span><span class="v" data-co="total">₩66,000</span></div>
+  </div>
+
+  <!-- CTA -->
+  <a class="btn btn-grad btn-block" data-co="start" href="player.html" style="font-size:15px;padding:15px"><i class="icn icn-play"></i> 바로 수강 시작하기</a>
+  <a class="btn btn-ghost btn-block" href="mypage.html" style="margin-top:10px">마이페이지에서 내 강의 보기</a>
+
+  <!-- 다음 단계 안내 -->
+  <div class="nextsteps">
+    <h3>학습을 200% 활용하는 법</h3>
+    <div class="ns"><span class="ni"><i class="icn icn-check-circle"></i></span><div><b>완청 인증으로 끝까지</b><span>영상을 끝까지 보면 완청이 인증돼요. 매일 알림으로 빠뜨린 강의를 챙겨드려요.</span></div></div>
+    <div class="ns"><span class="ni"><i class="icn icn-message"></i></span><div><b>모르면 1:1 질문</b><span>강의를 듣다 막히면 강의실에서 바로 선생님께 질문할 수 있어요. 현직 선생님이 직접 답해요.</span></div></div>
+    <div class="ns"><span class="ni"><i class="icn icn-cap"></i></span><div><b>다 들으면 수료증</b><span>전 강의를 완강하면 디지털 수료증이 발급돼요. PDF 학습 자료도 함께 받아요.</span></div></div>
+  </div>
+
+  <p class="muted" style="text-align:center;font-size:12.5px;margin-top:22px">
+    결제·환불 문의는 <a href="qna.html" style="color:var(--color-primary);font-weight:700">고객센터</a>에서 도와드려요.
+  </p>
+</div>
+
+<div class="foot"><div class="inner"><span><b style="color:var(--color-text)">EPIC 에픽영어교습소</b></span><span>이용약관 · 환불정책 · 고객센터</span></div></div>
+<script src="app.js?v=35"></script>
+</body>
+</html>

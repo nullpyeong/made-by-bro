@@ -1,0 +1,222 @@
+/* ============================================================
+   EPIC 에픽영어교습소 · 디자인 토큰 (SSOT) v2
+   Base tone: Friendly Bright (refined)
+   사용: 앱 전역 entry 최상단에서 import → @import "../design/tokens.css";
+   원칙: 컴포넌트/페이지는 var(--...) 토큰만 참조. hex 하드코딩 금지.
+   ============================================================ */
+
+:root{
+  /* ===== 1. 원시 팔레트 (primitive) ===== */
+  /* Brand Blue */
+  --blue-50:#eef4ff;--blue-100:#dce8ff;--blue-200:#bcd3fb;--blue-300:#90b4f7;
+  --blue-400:#5b8def;--blue-500:#2563eb;--blue-600:#1d54d6;--blue-700:#1a45b0;
+  /* Accent Amber */
+  --amber-50:#fff8ec;--amber-100:#fdecc8;--amber-300:#fcd34d;--amber-400:#fbbf24;--amber-500:#f59e0b;--amber-600:#c9770a;
+  /* Neutral (cool slate, refined ramp) */
+  --n-0:#ffffff;--n-25:#fafbfd;--n-50:#f5f7fb;--n-100:#eef1f7;--n-150:#e6eaf1;
+  --n-200:#dde3ec;--n-300:#c2cad8;--n-400:#9aa3b4;--n-500:#69748a;--n-600:#4c576d;--n-700:#343e51;--n-800:#212a3a;--n-900:#161d2b;
+  /* 별칭(하위호환: 기존 slate-* 유지) */
+  --slate-900:var(--n-800);--slate-700:var(--n-600);--slate-500:var(--n-500);--slate-300:var(--n-400);--slate-200:var(--n-200);--slate-100:var(--n-50);--white:#fff;
+  /* Status */
+  --green-50:#e8f6ef;--green-500:#12a06a;--red-50:#fdecec;--red-500:#e0464b;
+
+  /* ===== 2. 시맨틱 토큰 (semantic) — 컴포넌트는 이걸 사용 ===== */
+  --color-canvas:#f4f7fc;                 /* 페이지 베이스 */
+  --color-bg-start:#f1f5fc;               /* 배경 그라데이션(은은하게) */
+  --color-bg-end:#faf8f3;
+  --color-surface:var(--n-0);             /* 카드/표면 */
+  --color-surface-alt:var(--n-50);        /* 보조 표면(sunken) */
+  --color-surface-2:var(--n-25);
+  --color-text:#1b2433;
+  --color-text-muted:var(--n-500);
+  --color-text-subtle:var(--n-400);
+  --color-text-onPrimary:#fff;
+  --color-primary:var(--blue-500);
+  --color-primary-hover:var(--blue-600);
+  --color-primary-active:var(--blue-700);
+  --color-primary-soft:var(--blue-50);
+  --color-accent:var(--amber-500);
+  --color-accent-soft:var(--amber-50);
+  --color-border:#e8edf4;                 /* 헤어라인 */
+  --color-border-strong:var(--n-200);
+  --color-ring:rgba(37,99,235,.30);
+  --color-success:var(--green-500);--color-success-soft:var(--green-50);
+  --color-danger:var(--red-500);--color-danger-soft:var(--red-50);
+
+  /* ===== 3. 라운드(radius) ===== */
+  --radius-xs:.375rem;   /* 6 */
+  --radius-sm:.625rem;   /* 10 */
+  --radius-md:.75rem;    /* 12 */
+  --radius-lg:1rem;      /* 16 ← 카드 기본 */
+  --radius-xl:1.375rem;  /* 22 */
+  --radius-pill:999px;
+
+  /* ===== 4. 그림자 — 중성 다층(부드럽게). 파란 그림자 지양 ===== */
+  --shadow-xs:0 1px 2px rgba(20,28,46,.05);
+  --shadow-sm:0 1px 2px rgba(20,28,46,.04),0 2px 6px rgba(20,28,46,.05);
+  --shadow-card:0 1px 2px rgba(20,28,46,.04),0 6px 18px rgba(20,28,46,.06);
+  --shadow-pop:0 8px 20px rgba(20,28,46,.10),0 18px 44px rgba(20,28,46,.12);
+  --shadow-primary:0 6px 16px rgba(37,99,235,.26);   /* primary CTA 전용 */
+
+  /* ===== 5. 타이포 ===== */
+  --font-sans:'Pretendard','Apple SD Gothic Neo',-apple-system,'Malgun Gothic',sans-serif;
+  /* size scale */
+  --fs-display:2.75rem;--fs-h1:2rem;--fs-h2:1.5rem;--fs-h3:1.25rem;
+  --fs-lg:1.0625rem;--fs-base:.9375rem;--fs-sm:.8125rem;--fs-xs:.75rem;
+  /* line-height */
+  --lh-tight:1.15;--lh-snug:1.35;--lh-normal:1.6;
+  /* letter-spacing (tracking) */
+  --tracking-tight:-.022em;--tracking-snug:-.012em;--tracking-normal:0;--tracking-wide:.06em;
+  /* weight */
+  --w-regular:400;--w-medium:500;--w-semibold:600;--w-bold:700;--w-black:800;
+
+  /* ===== 6. 간격(spacing, 4px 베이스) ===== */
+  --sp-1:.25rem;--sp-2:.5rem;--sp-3:.75rem;--sp-4:1rem;--sp-5:1.25rem;--sp-6:1.5rem;
+  --sp-8:2rem;--sp-10:2.5rem;--sp-12:3rem;--sp-16:4rem;--sp-20:5rem;
+
+  /* ===== 7. 모션 ===== */
+  --ease:cubic-bezier(.4,0,.2,1);
+  --ease-out:cubic-bezier(.22,.61,.36,1);
+  --dur-1:.12s;--dur-2:.2s;--dur-3:.32s;
+  --dur:var(--dur-2); /* 하위호환 */
+
+  /* ===== 8. 레이아웃 / z-index ===== */
+  --container:1120px;--container-wide:1240px;--gnb-h:64px;
+  --z-base:1;--z-sticky:40;--z-nav:50;--z-overlay:100;--z-toast:200;
+
+  /* ===== 9. 그라데이션 토큰 ===== */
+  --grad-hero:radial-gradient(120% 80% at 50% -10%,var(--blue-50),transparent 60%);
+  --grad-brand:linear-gradient(135deg,var(--blue-500),var(--blue-700));
+  --grad-amber:linear-gradient(135deg,var(--amber-400),var(--amber-600));
+  /* 히어로 메시(은은한 다색 라이트) — 배경 분위기 */
+  --grad-mesh:
+    radial-gradient(45% 55% at 12% 8%, color-mix(in srgb,var(--blue-300) 55%,transparent), transparent 70%),
+    radial-gradient(40% 50% at 88% 0%,  color-mix(in srgb,var(--sky-300,#7dd3fc) 50%,transparent), transparent 70%),
+    radial-gradient(60% 60% at 50% 120%,color-mix(in srgb,var(--blue-200) 40%,transparent), transparent 70%);
+
+  /* ===== 10. 추가 엘리베이션 / 효과 ===== */
+  --shadow-lg:0 12px 28px rgba(20,28,46,.12),0 28px 64px rgba(20,28,46,.16);
+  --shadow-inset:inset 0 1px 0 rgba(255,255,255,.6);
+  --glass-bg:rgba(255,255,255,.72);
+  --glass-border:rgba(255,255,255,.55);
+  --blur-nav:14px;
+
+  /* ===== 11. 모션(추가) ===== */
+  --ease-spring:cubic-bezier(.34,1.56,.64,1);   /* 살짝 튕기는 진입 */
+  --dur-4:.5s;
+}
+
+/* ===== 다크모드 — [data-theme="dark"] 만 덮어쓰면 전체 반영 ===== */
+[data-theme="dark"]{
+  color-scheme:dark;
+  --color-canvas:#0b1120;--color-bg-start:#0f1830;--color-bg-end:#0b1020;
+  --color-surface:#141b2e;--color-surface-alt:#10182a;--color-surface-2:#182135;
+  --color-text:#eaf0ff;--color-text-muted:#9fb0d6;--color-text-subtle:#6b7798;
+  --color-text-onPrimary:#fff;
+  --color-primary:#5b8def;--color-primary-hover:#7aa4f5;--color-primary-active:#9dbcf8;
+  --color-primary-soft:#1a2742;
+  --color-accent:#fbbf24;--color-accent-soft:#332512;
+  --color-border:#222e48;--color-border-strong:#30405f;
+  --color-ring:rgba(122,164,245,.40);
+  --color-success:#34d399;--color-success-soft:#0f2a23;
+  --color-danger:#f87171;--color-danger-soft:#2c1518;
+  --shadow-xs:0 1px 2px rgba(0,0,0,.4);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.35),0 2px 6px rgba(0,0,0,.4);
+  --shadow-card:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.5);
+  --shadow-pop:0 10px 24px rgba(0,0,0,.55),0 22px 50px rgba(0,0,0,.6);
+  --shadow-lg:0 14px 32px rgba(0,0,0,.55),0 30px 70px rgba(0,0,0,.6);
+  --shadow-primary:0 6px 16px rgba(37,99,235,.5);
+  --glass-bg:rgba(20,27,46,.72);--glass-border:rgba(255,255,255,.06);
+  --shadow-inset:inset 0 1px 0 rgba(255,255,255,.05);
+}
+
+/* 모션 최소화 선호 사용자 존중(접근성) */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+}
+
+/* ============================================================
+   v4 — SaaS Product 레이어 (Linear / Vercel / Stripe 톤)
+   목적: 마켓플레이스 → 프로덕트 톤으로 격상.
+   인디고·바이올렛 그라데이션 아이덴티티 + 오로라/그리드/글로우 + 노이즈.
+   primary를 인디고 계열로 재매핑(토큰만 갈아끼우면 전 페이지 반영).
+   ============================================================ */
+:root{
+  /* ----- 원시 팔레트 — Clean Blue identity (하양 + 맑은 푸른색) ----- */
+  /* Azure (primary) */
+  --azure-50:#eef5ff;--azure-100:#dbe9ff;--azure-200:#bcd6ff;--azure-300:#90bbff;
+  --azure-400:#5b97f8;--azure-500:#2f6ff2;--azure-600:#1f5fe0;--azure-700:#1b4fc4;
+  /* Sky / Cyan (보조 — 모두 블루 패밀리) */
+  --sky-400:#38bdf8;--sky-500:#0ea5e9;--sky-600:#0284c7;
+  --cyan-400:#22d3ee;--cyan-500:#06b6d4;
+  /* 하위호환: 기존 indigo/violet 별칭을 블루로 리매핑(잔존 참조 안전) */
+  --indigo-400:#5b97f8;--indigo-500:#2f6ff2;--indigo-600:#1f5fe0;--indigo-700:#1b4fc4;--indigo-50:#eef5ff;
+  --violet-400:#60a5fa;--violet-500:#3b82f6;--violet-600:#2563eb;
+
+  /* ----- primary 재매핑(맑은 블루) ----- */
+  --color-primary:var(--azure-500);
+  --color-primary-hover:var(--azure-600);
+  --color-primary-active:var(--azure-700);
+  --color-primary-soft:var(--azure-50);
+  --color-ring:rgba(47,111,242,.32);
+  --shadow-primary:0 6px 20px rgba(37,99,235,.26);
+
+  /* 2차 액센트(스카이) — amber는 친근한 보조 액센트로 잔존 */
+  --color-accent2:var(--sky-500);
+  --color-accent2-soft:#e3f4fe;
+
+  /* ----- 타이포 격상(더 큰 디스플레이, 더 타이트) ----- */
+  --fs-hero:clamp(2.6rem,6vw,4.25rem);
+  --fs-display:clamp(2.1rem,4vw,2.9rem);
+  --tracking-hero:-.035em;
+  --font-mono:'SFMono-Regular','JetBrains Mono',ui-monospace,'Cascadia Code',Menlo,Consolas,monospace;
+
+  /* ----- SaaS 라운드(약간 더 절제) ----- */
+  --radius-card:1.125rem;
+
+  /* ----- 시그니처 그라데이션 — 블루→스카이→시안(맑은 블루 패밀리) ----- */
+  --grad-primary:linear-gradient(135deg,#2f6ff2,#2aa4ff);
+  --grad-iris:linear-gradient(120deg,#2563eb 0%,#3b82f6 45%,#22d3ee 115%);
+  --grad-text:linear-gradient(110deg,#1f5fe0,#3b82f6 48%,#06b6d4);
+  --grad-sheen:linear-gradient(120deg,transparent 25%,rgba(255,255,255,.55) 50%,transparent 75%);
+  /* 오로라(히어로/페이지 분위기) — 맑은 블루 블롭 */
+  --aurora-1:rgba(59,130,246,.46);
+  --aurora-2:rgba(56,189,248,.38);
+  --aurora-3:rgba(34,211,238,.28);
+
+  /* ----- 그리드/도트 배경 패턴 ----- */
+  --grid-line:rgba(20,28,46,.05);
+  --grid-size:34px;
+  --pattern-grid:linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px);
+
+  /* ----- 글로우/링 ----- */
+  --glow-primary:0 0 0 1px rgba(47,111,242,.16),0 8px 30px rgba(47,111,242,.20);
+  --ring-soft:0 0 0 1px var(--color-border);
+  --border-grad:linear-gradient(180deg,rgba(47,111,242,.42),rgba(56,189,248,.12));
+
+  /* SaaS 표면 — Clean Blue: 순백 베이스에 맑은 푸른빛 한 톤 */
+  --color-canvas:#fafcff;                            /* 거의 흰색 + 밝은 푸른빛 한 톤 */
+  --color-bg-start:#eaf3ff;--color-bg-end:#fafcff;   /* 위쪽 옅은 하늘빛 → 아래 에어리 화이트 */
+
+  /* 라이트 모드 오로라: 맑은 블루 계열 — 화사하고 깨끗하게 */
+  --aurora-1:rgba(59,130,246,.26);   /* 브라이트 블루 */
+  --aurora-2:rgba(56,189,248,.22);   /* 스카이 블루 */
+  --aurora-3:rgba(125,211,252,.20);  /* 라이트 시안-블루 */
+}
+
+/* 다크: 네이비 → 뉴트럴 니어블랙(Vercel/Linear 톤) + 인디고 글로우 */
+[data-theme="dark"]{
+  --color-canvas:#08080c;--color-bg-start:#08080c;--color-bg-end:#08080c;
+  --color-surface:#101016;--color-surface-alt:#0c0c12;--color-surface-2:#16161f;
+  --color-text:#f4f5fb;--color-text-muted:#a0a3b8;--color-text-subtle:#6b6e84;
+  --color-border:#1e1e2a;--color-border-strong:#2c2c3c;
+  --color-primary:#5b97f8;--color-primary-hover:#7fb0fb;--color-primary-active:#a6cafd;
+  --color-primary-soft:#10233f;
+  --color-accent2:var(--sky-400);--color-accent2-soft:#0c2433;
+  --color-ring:rgba(91,151,248,.45);
+  --grid-line:rgba(255,255,255,.045);
+  --aurora-1:rgba(59,130,246,.38);--aurora-2:rgba(56,189,248,.30);--aurora-3:rgba(34,211,238,.22);
+  --glow-primary:0 0 0 1px rgba(91,151,248,.22),0 10px 40px rgba(59,130,246,.30);
+  --border-grad:linear-gradient(180deg,rgba(91,151,248,.55),rgba(56,189,248,.10));
+  --shadow-primary:0 6px 22px rgba(59,130,246,.45);
+}

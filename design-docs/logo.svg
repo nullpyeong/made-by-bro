@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1480 1230" fill="none">
+  <!-- ===== 아이콘 (펼친 책 + 밤하늘 탐험 장면) ===== -->
+  <g transform="translate(153,0)" stroke="#4a2328" stroke-width="21" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18 158 L18 792"/>
+    <path d="M1157 158 L1157 792"/>
+    <path d="M64 792 L64 104 C 230 58 430 58 566 124"/>
+    <path d="M64 792 C 252 872 444 864 588 806"/>
+    <path d="M1110 792 L1110 104 C 944 58 744 58 608 124"/>
+    <path d="M1110 792 C 922 872 732 864 588 806"/>
+    <path d="M96 392 L356 392"/>
+    <path d="M432 208 L432 548"/>
+    <path d="M432 210 C 512 188 560 244 634 224 L678 224 L638 272 L678 320 C 600 306 512 322 432 320"/>
+    <path d="M396 548 L590 548 L590 672 L760 672 L760 762 L838 762"/>
+    <path d="M700 548 L700 604"/>
+    <path d="M852 168 A 96 96 0 1 0 852 356 A 70 70 0 1 1 852 168 Z"/>
+    <circle cx="690" cy="462" r="22"/>
+    <circle cx="968" cy="418" r="15" fill="#4a2328" stroke="none"/>
+    <circle cx="958" cy="636" r="20"/>
+    <path d="M1090 450 C 1098 496 1102 500 1148 508 C 1102 516 1098 520 1090 566 C 1082 520 1078 516 1032 508 C 1078 500 1082 496 1090 450 Z"/>
+  </g>
+  <!-- ===== 워드마크 ===== -->
+  <text x="740" y="1070" text-anchor="middle" font-family="'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="140" font-weight="800" fill="#4a2328" letter-spacing="-3">EPIC<tspan font-size="124">에픽영어교습소</tspan></text>
+  <text x="740" y="1172" text-anchor="middle" font-family="'Pretendard',Arial,sans-serif" font-size="56" font-weight="700" fill="#4a2328" letter-spacing="13">EVERY PERSON IS CURIOUS</text>
+</svg>

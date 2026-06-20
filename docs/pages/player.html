@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>수강 · 교실에서 선생님께 질문하기 · EPIC</title>
+<link rel="stylesheet" href="../design/tokens.css?v=35">
+<link rel="stylesheet" href="app.css?v=35">
+<script>(function(){try{if(localStorage.getItem('epic-reset3')!=='1'){localStorage.removeItem('epic-theme');localStorage.removeItem('epic-theme-v2');localStorage.setItem('epic-reset3','1');}var t=localStorage.getItem('epic-theme-v2');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+<style>
+  /* 밝은 셸 — 영상 프레임만 다크 */
+  .ptop{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.86);-webkit-backdrop-filter:blur(12px) saturate(1.4);backdrop-filter:blur(12px) saturate(1.4);border-bottom:1px solid var(--color-border)}
+  .ptop .inner{max-width:1680px;margin:0 auto;padding:12px 28px;display:flex;align-items:center;gap:16px}
+  .ptop .wm b{color:var(--color-text)}.ptop .wm i{color:var(--color-text-muted)}
+  .ptop .prog{color:var(--color-text-muted);font-size:12.5px;display:flex;align-items:center;gap:8px}
+  .ptop .prog .pbar{width:84px;height:6px;border-radius:999px;background:var(--color-surface-alt);overflow:hidden}
+  .ptop .prog .pbar i{display:block;height:100%;width:38%;background:var(--grad-primary)}
+  .ptop .list{border:1px solid var(--color-border);background:var(--color-surface);color:var(--color-text)}
+  .ptop .list:hover{background:var(--color-surface-alt)}
+  .player{max-width:1680px;margin:0 auto;display:grid;grid-template-columns:1fr 360px}
+  .player>*{min-width:0}
+  .pmain{background:var(--color-surface);border-right:1px solid var(--color-border);min-width:0}
+  /* 영상 프레임: 밝은 셸 위에 떠 있는 다크 카드 */
+  .stage{padding:20px 22px 4px}
+  /* 와이드 셸에서 영상이 화면 높이를 넘지 않도록 16:9 기준 상한 */
+  .stage .video{max-width:calc((100vh - 150px) * 16 / 9);margin-inline:auto}
+  .video{position:relative;aspect-ratio:16/9;background:radial-gradient(120% 120% at 50% 0%,#11161f,#070a0f);border-radius:var(--radius-lg);overflow:hidden;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-lg);border:1px solid #00000014}
+  .quiz-overlay{position:absolute;inset:0;background:rgba(8,12,20,.78);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:22px}
+  .vctrl{position:absolute;bottom:0;left:0;right:0;padding:11px 16px;background:linear-gradient(transparent,#000c);display:flex;align-items:center;gap:12px;color:#fff;font-size:12px}
+  .vtrack{flex:1;height:5px;background:#fff3;border-radius:999px;position:relative}
+  .vtrack i{position:absolute;left:0;top:0;bottom:0;width:38%;background:var(--color-primary);border-radius:999px}
+  .speed{background:#fff2;border-radius:6px;padding:3px 9px;cursor:pointer;border:none;color:#fff;font-family:inherit;font-size:12px}
+  .pl{background:var(--color-surface);max-height:calc(100vh - 58px);overflow:auto}
+  .pl .sh{padding:13px 16px;font-size:12px;font-weight:700;color:var(--color-text-muted);background:var(--color-surface-alt);position:sticky;top:0;z-index:1;border-bottom:1px solid var(--color-border)}
+  .pl .it{padding:12px 16px;font-size:12.5px;border-bottom:1px solid var(--color-border);display:flex;align-items:center;gap:9px;cursor:pointer;text-decoration:none;color:inherit}
+  .pl .it:hover{background:var(--color-surface-alt)}
+  .pl .it.cur{background:var(--color-primary-soft)}
+  .ck{width:17px;height:17px;border-radius:50%;border:2px solid var(--color-border-strong);flex-shrink:0;font-size:9px;display:flex;align-items:center;justify-content:center;color:#fff}
+  .ck.done{background:var(--color-success);border-color:var(--color-success)}
+  .ck.cur{border-color:var(--color-primary);color:var(--color-primary)}
+  @media(max-width:860px){.player{grid-template-columns:1fr}.pmain{border-right:none}.pl{border-top:1px solid var(--color-border)}}
+</style>
+</head>
+<body>
+<div class="ptop"><div class="inner">
+  <a class="logo" href="course.html"><span class="ico mark"><svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M9 7.3v9.4l7.2-4.7z"/></svg></span><span class="wm"><b>EPIC<em style="color:var(--amber-400);font-style:normal">.</em></b><i>초·중등 데일리 영어회화 30일</i></span></a>
+  <div style="margin-left:auto;display:flex;gap:14px;align-items:center"><span class="prog">진도 38%<span class="pbar"><i></i></span></span><a class="btn btn-sm list" href="course.html">강의목록</a></div>
+</div></div>
+
+<div class="player">
+  <div class="pmain">
+    <div class="stage">
+    <div class="video">
+      <div style="width:66px;height:66px;border-radius:50%;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px"><i class="icn icn-play"></i></div>
+      <div style="position:absolute;top:12px;right:14px;font-size:10px;color:rgba(255,255,255,.5)">user@epic.com · 워터마크</div>
+      <div style="position:absolute;top:12px;left:14px;font-size:10px;color:#fff;background:rgba(0,0,0,.4);padding:4px 9px;border-radius:999px"><i class="icn icn-lock"></i> 최초 수강 빨리감기 제한</div>
+      <!-- 인라인 퀴즈 게이팅 (클릭 가능) -->
+      <div class="quiz-overlay">
+        <div class="card quiz" style="max-width:440px;width:100%;padding:24px">
+          <div class="badge accent" style="margin-bottom:10px"><i class="icn icn-pause"></i> 진행 퀴즈 · 정답 시 계속 재생</div>
+          <div style="font-weight:700;font-size:15px;margin-bottom:14px">수업 시간에 "질문해도 될까요?"를 영어로 알맞게 표현한 것은?</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <button class="btn btn-ghost quiz-opt" style="justify-content:flex-start">① Question me, please.</button>
+            <button class="btn btn-ghost quiz-opt" data-correct="1" style="justify-content:flex-start">② Can I ask a question?</button>
+            <button class="btn btn-ghost quiz-opt" style="justify-content:flex-start">③ I have question you.</button>
+          </div>
+          <div class="muted" style="font-size:11px;margin-top:12px">정답을 선택해야 다음 구간으로 진행됩니다.</div>
+        </div>
+      </div>
+      <div class="vctrl">
+        <span><i class="icn icn-play"></i></span><span>12:05</span><div class="vtrack"><i></i></div><span>31:40</span>
+        <button class="speed" data-act="speed" data-cur="1.5x">1.5x <i class="icn icn-chevron"></i></button><span><i class="icn icn-maximize"></i></span>
+      </div>
+    </div>
+    </div>
+    <div style="padding:16px 22px 22px" data-tabscope data-lesson>
+      <div class="muted" style="padding:40px 0;text-align:center;font-size:13px">강의를 불러오는 중…</div>
+    </div>
+  </div>
+  <!-- 재생목록 -->
+  <div class="pl"><div class="sh" style="color:var(--color-text-muted)">재생목록</div></div>
+</div>
+<script src="app.js?v=35"></script>
+</body>
+</html>

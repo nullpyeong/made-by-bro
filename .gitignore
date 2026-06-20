@@ -1,0 +1,36 @@
+# 의존성
+node_modules/
+.pnpm-store/
+
+# 빌드 산출물
+dist/
+build/
+.next/
+out/
+
+# 환경변수 (절대 커밋 금지 — DB 비번/API 키)
+.env
+.env.*
+!.env.example
+
+# Prisma
+apps/api/prisma/*.db
+
+# 로그/캐시
+*.log
+.cache/
+.turbo/
+
+# OS / 에디터
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# 에이전트/임시
+.agents/
+.task-*
+_*.py
+_*.html
+_*.png

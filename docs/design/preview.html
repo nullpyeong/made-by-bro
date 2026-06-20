@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EPIC 디자인 토큰 v2 · 스타일가이드</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="../pages/app.css">
+<style>
+  body{padding:0}
+  .head{max-width:1000px;margin:0 auto;padding:36px 24px 8px}
+  .head h1{font-size:var(--fs-h1);font-weight:var(--w-black)}
+  .head h1 em{font-style:normal;color:var(--color-primary)}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 24px 48px}
+  .panel{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-card);padding:22px;margin-top:18px}
+  .panel h2{font-size:var(--fs-h3);font-weight:var(--w-bold);margin-bottom:16px}
+  .row{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  .sw{width:118px}
+  .sw .c{height:54px;border-radius:var(--radius-md);border:1px solid var(--color-border)}
+  .sw .l{font-size:var(--fs-xs);color:var(--color-text-muted);margin-top:6px}
+  .sw .h{font-size:var(--fs-xs);font-weight:var(--w-semibold)}
+  .el{width:150px;height:84px;border-radius:var(--radius-lg);background:var(--color-surface);display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;font-size:var(--fs-xs);color:var(--color-text-muted)}
+  .ty>div{margin-bottom:8px}
+</style>
+</head>
+<body>
+<div class="head"><h1>EPIC <em>Friendly Bright</em> · 토큰 v2 스타일가이드</h1>
+<p class="muted" style="margin-top:6px">이 페이지는 <code>tokens.css</code> + 실제 <code>pages/app.css</code>를 그대로 불러옵니다. 토큰을 바꾸면 여기와 전체 서비스가 동시에 바뀝니다.</p></div>
+
+<div class="wrap">
+  <div class="panel">
+    <h2>컬러 토큰</h2>
+    <div class="row">
+      <div class="sw"><div class="c" style="background:var(--color-primary)"></div><div class="l">primary</div><div class="h">#2563EB</div></div>
+      <div class="sw"><div class="c" style="background:var(--color-primary-hover)"></div><div class="l">primary-hover</div><div class="h">#1D54D6</div></div>
+      <div class="sw"><div class="c" style="background:var(--color-accent)"></div><div class="l">accent</div><div class="h">#F59E0B</div></div>
+      <div class="sw"><div class="c" style="background:var(--color-text)"></div><div class="l">text</div><div class="h">#1B2433</div></div>
+      <div class="sw"><div class="c" style="background:var(--color-text-muted)"></div><div class="l">muted</div><div class="h">#69748A</div></div>
+      <div class="sw"><div class="c" style="background:var(--color-surface-alt)"></div><div class="l">surface-alt</div><div class="h">#F5F7FB</div></div>
+      <div class="sw"><div class="c" style="background:var(--color-border)"></div><div class="l">border</div><div class="h">#E8EDF4</div></div>
+      <div class="sw"><div class="c" style="background:var(--color-success)"></div><div class="l">success</div><div class="h">#12A06A</div></div>
+      <div class="sw"><div class="c" style="background:var(--color-danger)"></div><div class="l">danger</div><div class="h">#E0464B</div></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Elevation (중성 다층 그림자)</h2>
+    <div class="row">
+      <div class="el" style="box-shadow:var(--shadow-sm)">shadow-sm</div>
+      <div class="el" style="box-shadow:var(--shadow-card)">shadow-card</div>
+      <div class="el" style="box-shadow:var(--shadow-pop)">shadow-pop</div>
+      <div class="el" style="box-shadow:var(--shadow-primary)">shadow-primary</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>타이포 스케일</h2>
+    <div class="ty">
+      <div style="font-size:var(--fs-display);font-weight:var(--w-black);letter-spacing:var(--tracking-tight)">Display 44</div>
+      <div style="font-size:var(--fs-h1);font-weight:var(--w-black);letter-spacing:var(--tracking-tight)">Heading 1 — 32</div>
+      <div style="font-size:var(--fs-h2);font-weight:var(--w-bold)">Heading 2 — 24</div>
+      <div style="font-size:var(--fs-h3);font-weight:var(--w-bold)">Heading 3 — 20</div>
+      <div style="font-size:var(--fs-base)">본문 Body 15 — Every Person Is Curious. 행간 1.6으로 읽기 편하게.</div>
+      <div style="font-size:var(--fs-sm)" class="muted">Small 13 · 보조 텍스트</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>버튼 · 뱃지 · 칩 · 인풋</h2>
+    <div class="row" style="margin-bottom:14px">
+      <button class="btn btn-primary">Primary</button>
+      <button class="btn btn-primary" disabled>Disabled</button>
+      <button class="btn btn-ghost">Secondary</button>
+      <button class="btn btn-accent">Accent</button>
+    </div>
+    <div class="row" style="margin-bottom:14px">
+      <span class="badge">무료</span><span class="badge accent">BEST</span>
+      <span class="badge green">수료완료</span><span class="badge red">D-7</span><span class="badge gray">무제한</span>
+    </div>
+    <div class="row" style="margin-bottom:14px">
+      <span class="chip on">전체</span><span class="chip">회화</span><span class="chip">문법</span>
+    </div>
+    <div class="row"><input class="input" placeholder="포커스해보세요" style="max-width:280px"></div>
+  </div>
+
+  <div class="panel">
+    <h2>코스 카드</h2>
+    <div class="grid g3">
+      <div class="cc"><div class="th gx-blue">Conversation<span class="tag badge accent">BEST</span></div><div class="in"><div class="ti">데일리 영어회화 30일</div><div class="ins">김에픽 강사</div><div class="mt"><span class="star">★ 4.9</span><span class="pr">₩66,000</span></div></div></div>
+      <div class="cc"><div class="th gx-amber">Grammar</div><div class="in"><div class="ti">기초 영문법 완성</div><div class="ins">박그래머 강사</div><div class="mt"><span class="star">★ 4.8</span><span class="pr">₩48,000</span></div></div></div>
+      <div class="cc"><div class="th gx-teal">Phonics<span class="tag badge green">무료</span></div><div class="in"><div class="ti">초등 영어 파닉스</div><div class="ins">최파닉 강사</div><div class="mt"><span class="star">★ 4.7</span><span class="pr" style="color:var(--color-success)">무료</span></div></div></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
