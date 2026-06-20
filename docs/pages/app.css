@@ -1149,6 +1149,13 @@ td .minibar .bar{flex:1;max-width:90px}
 
 /* ===== 요금제: 단건/멤버십 보조 ===== */
 .plan .pnote{text-align:center;font-size:11.5px;color:var(--color-text-muted);margin-top:10px}
+.plan .panchor{font-size:12px;line-height:var(--lh-snug);color:var(--color-primary);font-weight:var(--w-medium);margin-top:9px}
+.plan .panchor b{font-weight:var(--w-black)}
+/* 안심 보장 띠 */
+.assure-row{display:flex;flex-wrap:wrap;justify-content:center;gap:9px 26px;max-width:720px;margin:18px auto 0}
+.assure-row .ai{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--color-text-muted)}
+.assure-row .ai i{color:var(--color-primary);flex-shrink:0}
+.assure-row .ai b{color:var(--color-text);font-weight:var(--w-bold)}
 .enroll-strip{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
   margin-top:18px;padding:16px 20px;border-radius:var(--radius-lg);
   background:linear-gradient(100deg,var(--color-primary-soft),var(--color-accent2-soft));
