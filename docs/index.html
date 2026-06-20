@@ -3,19 +3,178 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>에픽영어교습소 · 초·중등 영어 인강</title>
-  <meta name="description" content="완청 인증·구간 퀴즈·1:1 선생님 Q&A로 끝까지 완주하는 초·중등 영어 인강. 에픽영어교습소.">
-  <!-- 랜딩 진입점: 실제 홈으로 보냄 -->
-  <meta http-equiv="refresh" content="0; url=./pages/home.html">
-  <link rel="canonical" href="./pages/home.html">
+  <title>에픽영어교습소 · 시안 둘러보기</title>
+  <meta name="description" content="에픽영어교습소 초·중등 영어 인강 사이트 시안. 화면을 클릭해서 둘러보세요.">
   <style>
-    body{font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;display:flex;
-      min-height:100vh;align-items:center;justify-content:center;margin:0;
-      background:#fafcff;color:#1b2433}
-    a{color:#2f6ff2;text-decoration:none;font-weight:600}
+    :root{
+      --blue:#2f6ff2; --blue-dark:#1e54c9; --blue-soft:#eaf1ff;
+      --ink:#1b2433; --muted:#5b6a82; --line:#e3eaf5;
+      --bg:#fafcff; --card:#ffffff;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; background:var(--bg); color:var(--ink);
+      font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+      line-height:1.6; -webkit-font-smoothing:antialiased;
+    }
+    .wrap{max-width:1040px; margin:0 auto; padding:56px 24px 80px}
+    .brand{display:flex; align-items:center; gap:10px; margin-bottom:28px}
+    .mark{width:34px; height:34px; border-radius:9px;
+      background:linear-gradient(135deg,#2f6ff2,#2aa4ff);
+      display:flex; align-items:center; justify-content:center;}
+    .mark svg{width:16px; height:16px}
+    .brand b{font-size:18px; letter-spacing:-.02em}
+    h1{font-size:clamp(1.7rem,3.6vw,2.4rem); letter-spacing:-.03em; margin:.2em 0 .25em}
+    h1 span{background:linear-gradient(120deg,#2f6ff2,#2aa4ff);
+      -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent}
+    .lead{color:var(--muted); font-size:1.02rem; max-width:60ch; margin:0 0 14px}
+    .guide{display:inline-flex; align-items:center; gap:8px; flex-wrap:wrap;
+      background:var(--blue-soft); color:var(--blue-dark);
+      border:1px solid #d4e2fb; border-radius:999px; padding:8px 14px; font-size:.9rem; font-weight:600}
+    .group{margin-top:40px}
+    .group h2{font-size:.82rem; letter-spacing:.12em; text-transform:uppercase;
+      color:var(--muted); font-weight:700; margin:0 0 14px; padding-left:2px}
+    .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(248px,1fr)); gap:14px}
+    .card{display:block; text-decoration:none; color:inherit;
+      background:var(--card); border:1px solid var(--line); border-radius:16px;
+      padding:18px 18px 16px; transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease;}
+    .card:hover{transform:translateY(-3px); box-shadow:0 12px 28px rgba(31,84,201,.12); border-color:#cdddfb}
+    .card .top{display:flex; align-items:center; gap:10px; margin-bottom:8px}
+    .ico{width:34px; height:34px; border-radius:9px; background:var(--blue-soft);
+      display:flex; align-items:center; justify-content:center; flex:0 0 auto}
+    .ico svg{width:17px; height:17px; stroke:var(--blue); fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round}
+    .card h3{margin:0; font-size:1.04rem; letter-spacing:-.02em}
+    .card p{margin:0; color:var(--muted); font-size:.9rem}
+    .card .go{margin-top:12px; display:inline-flex; align-items:center; gap:6px;
+      color:var(--blue); font-weight:700; font-size:.88rem}
+    .card .go svg{width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round}
+    .card.feat{grid-column:1/-1; background:linear-gradient(120deg,#f3f8ff,#ffffff); border-color:#d4e2fb}
+    .card.feat .ico{background:linear-gradient(135deg,#2f6ff2,#2aa4ff)}
+    .card.feat .ico svg{stroke:#fff}
+    .card.feat h3{font-size:1.2rem}
+    footer{margin-top:48px; padding-top:20px; border-top:1px solid var(--line);
+      color:var(--muted); font-size:.85rem}
   </style>
 </head>
 <body>
-  <p>잠시만요… 홈으로 이동합니다. 자동으로 넘어가지 않으면 <a href="./pages/home.html">여기를 클릭</a>하세요.</p>
+  <div class="wrap">
+    <div class="brand">
+      <span class="mark"><svg viewBox="0 0 24 24" fill="none"><path d="M8 5v14l11-7z" fill="#fff"/></svg></span>
+      <b>에픽영어교습소</b>
+    </div>
+
+    <h1>사이트 시안을 <span>클릭해서</span> 둘러보세요</h1>
+    <p class="lead">초·중등 영어 인강 사이트 시안입니다. 아래에서 보고 싶은 화면을 누르면 해당 페이지로 이동합니다.</p>
+    <span class="guide">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1e54c9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      화면을 누른 뒤, 브라우저 ‘뒤로 가기’를 누르면 이 목차로 돌아옵니다
+    </span>
+
+    <div class="group">
+      <h2>대표 화면</h2>
+      <div class="grid">
+        <a class="card feat" href="./pages/home.html">
+          <div class="top">
+            <span class="ico"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9 21v-6h6v6"/></svg></span>
+            <h3>홈 (랜딩 페이지)</h3>
+          </div>
+          <p>학부모가 가장 먼저 보는 첫 화면 — 원장 소개, 학습 방식, 인기 강의, 수강 안내까지 한눈에.</p>
+          <span class="go">홈 화면 보기 <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        </a>
+      </div>
+    </div>
+
+    <div class="group">
+      <h2>강의 화면</h2>
+      <div class="grid">
+        <a class="card" href="./pages/course.html">
+          <div class="top">
+            <span class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M3 18l4 3 5-3"/></svg></span>
+            <h3>강의 상세</h3>
+          </div>
+          <p>강의 소개·커리큘럼·수강 신청 화면.</p>
+          <span class="go">보기 <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        </a>
+        <a class="card" href="./pages/player.html">
+          <div class="top">
+            <span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 9l5 3-5 3z"/></svg></span>
+            <h3>강의실</h3>
+          </div>
+          <p>실제 수강 화면 — 영상·자막·퀴즈·노트.</p>
+          <span class="go">보기 <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        </a>
+        <a class="card" href="./pages/mypage.html">
+          <div class="top">
+            <span class="ico"><svg viewBox="0 0 24 24"><path d="M4 19v-1a6 6 0 0112 0v1"/><circle cx="10" cy="8" r="4"/><path d="M18 8v6M21 11h-6"/></svg></span>
+            <h3>마이페이지</h3>
+          </div>
+          <p>내 학습 현황·진도·단원평가·학부모 리포트.</p>
+          <span class="go">보기 <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        </a>
+      </div>
+    </div>
+
+    <div class="group">
+      <h2>수강 신청 · 결제 흐름</h2>
+      <div class="grid">
+        <a class="card" href="./pages/cart.html">
+          <div class="top">
+            <span class="ico"><svg viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M3 4h2l2.5 12h11l2-8H6"/></svg></span>
+            <h3>장바구니</h3>
+          </div>
+          <p>담은 강의 확인·수량·쿠폰.</p>
+          <span class="go">보기 <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        </a>
+        <a class="card" href="./pages/checkout.html">
+          <div class="top">
+            <span class="ico"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></span>
+            <h3>결제</h3>
+          </div>
+          <p>주문·결제수단 선택 화면.</p>
+          <span class="go">보기 <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        </a>
+        <a class="card" href="./pages/complete.html">
+          <div class="top">
+            <span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg></span>
+            <h3>결제 완료</h3>
+          </div>
+          <p>결제 완료·수강 시작 안내.</p>
+          <span class="go">보기 <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        </a>
+      </div>
+    </div>
+
+    <div class="group">
+      <h2>그 외 화면</h2>
+      <div class="grid">
+        <a class="card" href="./pages/login.html">
+          <div class="top">
+            <span class="ico"><svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg></span>
+            <h3>로그인</h3>
+          </div>
+          <p>회원 로그인 화면.</p>
+          <span class="go">보기 <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        </a>
+        <a class="card" href="./pages/qna.html">
+          <div class="top">
+            <span class="ico"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H8l-5 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></span>
+            <h3>Q&amp;A</h3>
+          </div>
+          <p>1:1 질문·답변 게시판.</p>
+          <span class="go">보기 <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        </a>
+        <a class="card" href="./pages/admin.html">
+          <div class="top">
+            <span class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></span>
+            <h3>관리자 콘솔</h3>
+          </div>
+          <p>원장용 운영 화면 — 매출·수강생·강의 관리.</p>
+          <span class="go">보기 <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        </a>
+      </div>
+    </div>
+
+    <footer>에픽영어교습소 · 초·중등 영어 인강 사이트 시안 — 보시면서 고치고 싶은 부분을 편하게 말씀해 주세요.</footer>
+  </div>
 </body>
 </html>
