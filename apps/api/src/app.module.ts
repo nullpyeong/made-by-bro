@@ -10,6 +10,7 @@ import { EventsModule } from './events/events.module';
 import { RewardsModule } from './rewards/rewards.module';
 import { AuthModule } from './auth/auth.module';
 import { PaymentsModule } from './payments/payments.module';
+import { EnrollmentsModule } from './enrollments/enrollments.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { PaymentsModule } from './payments/payments.module';
     RewardsModule,
     AuthModule,
     PaymentsModule,
+    EnrollmentsModule,
   ],
   controllers: [HealthController],
 })

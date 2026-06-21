@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { initDashboard, initLiveSync } from '../lib/engine'
-import { getStoredUser } from '../lib/api'
+import { getStoredUser, fetchMyEnrollments, type Enrollment } from '../lib/api'
 
 /* 마이페이지 — 학습 허브(resume-first 대시보드).
    정적 셸은 docs/pages/mypage.html 과 동일하게 주입하고, initDashboard()가
@@ -39,7 +39,7 @@ const BODY = `
   <div class="kpis" style="margin-bottom:8px">
     <div class="kpi"><span class="accentbar"></span>
       <div class="top"><span class="ic"><i class="icn icn-book"></i></span></div>
-      <div class="lb">수강 중</div><div class="val">3<small> 강</small></div>
+      <div class="lb">수강 중</div><div class="val" data-kpi-enrolled>3<small> 강</small></div>
       <div class="sub"><span class="trend">▲ 1</span> 이번 달 신규</div>
     </div>
     <div class="kpi green"><span class="accentbar"></span>
@@ -75,7 +75,7 @@ const BODY = `
     <!-- 전 과정 마스터 배지/배너 (JS가 채움) -->
     <div data-master class="mastercard"></div>
 
-    <div class="grid g3">
+    <div class="grid g3" data-mycourses>
       <div class="cc" style="cursor:default"><div class="th photo" style="background-image:url(/assets/course-conversation.jpg)"><span class="cat">회화</span><span class="lv">수강중</span></div><div class="in"><div class="ti">초·중등 데일리 영어회화 30일</div><div class="bar" style="margin:8px 0"><i data-course-bar style="width:43%"></i></div><div class="mt"><span class="muted" data-course-pct>진도 43%</span><span class="badge red">D-72</span></div><a class="btn btn-primary btn-block btn-sm" href="/player" style="margin-top:10px">이어보기</a></div></div>
       <div class="cc" style="cursor:default"><div class="th photo" style="background-image:url(/assets/course-exam.jpg)"><span class="cat">내신</span><span class="lv">수료</span></div><div class="in"><div class="ti">중등 내신 영어 완성</div><div class="bar" style="margin:8px 0"><i class="done" style="width:100%"></i></div><div class="mt"><span class="badge green"><i class="icn icn-check"></i> 수료완료</span><span class="muted">무제한</span></div><button class="btn btn-ghost btn-block btn-sm" data-act="modal-open" data-target="certModal" style="margin-top:10px"><i class="icn icn-cap"></i> 수료증 보기</button></div></div>
       <div class="cc" style="cursor:default"><div class="th photo" style="background-image:url(/assets/course-starter.jpg)"><span class="cat">파닉스</span><span class="lv">무료</span></div><div class="in"><div class="ti">초등 영어 파닉스</div><div class="bar" style="margin:8px 0"><i style="width:12%"></i></div><div class="mt"><span class="muted">진도 12%</span><span class="badge gray">무료</span></div><a class="btn btn-primary btn-block btn-sm" href="/player" style="margin-top:10px">이어보기</a></div></div>
@@ -236,20 +236,85 @@ const BODY = `
 </div>
 `
 
+// HTML 이스케이프(코스 제목 등 DB 값 주입 시 안전).
+function esc(s: string): string {
+  return s.replace(
+    /[&<>"']/g,
+    (c) =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] as string,
+  )
+}
+
+// 만료일까지 남은 일수(D-day). null이면 무제한.
+function dday(expiresAt: string | null): number | null {
+  if (!expiresAt) return null
+  const ms = new Date(expiresAt).getTime() - Date.now()
+  return Math.ceil(ms / 86_400_000)
+}
+
+// 수강건 1개 → 카드 HTML. 정적 데모 카드(.cc)와 동일 구조.
+function cardHtml(e: Enrollment): string {
+  const pct = e.progress.pct
+  const done = pct >= 100 || e.status === 'cancelled'
+  const thumb = e.course.thumbnail_url || '/assets/course-conversation.jpg'
+  const lv = e.status === 'expired' ? '만료' : pct >= 100 ? '수료' : '수강중'
+
+  // 상태 배지: 수료 / 만료 / D-day(active) / 무제한
+  const d = dday(e.expires_at)
+  let badge: string
+  if (pct >= 100) badge = '<span class="badge green"><i class="icn icn-check"></i> 수료완료</span>'
+  else if (e.status === 'expired') badge = '<span class="badge gray">만료</span>'
+  else if (d == null) badge = '<span class="muted">무제한</span>'
+  else if (d <= 7) badge = `<span class="badge red">D-${Math.max(d, 0)}</span>`
+  else badge = `<span class="badge gray">D-${d}</span>`
+
+  const barClass = pct >= 100 ? 'done' : ''
+  const cta = done
+    ? '<a class="btn btn-ghost btn-block btn-sm" href="/player" style="margin-top:10px">다시보기</a>'
+    : '<a class="btn btn-primary btn-block btn-sm" href="/player" style="margin-top:10px">이어보기</a>'
+
+  return `<div class="cc" style="cursor:default">
+    <div class="th photo" style="background-image:url(${esc(thumb)})"><span class="lv">${lv}</span></div>
+    <div class="in">
+      <div class="ti">${esc(e.course.title)}</div>
+      <div class="bar" style="margin:8px 0"><i class="${barClass}" style="width:${pct}%"></i></div>
+      <div class="mt"><span class="muted">진도 ${pct}%</span>${badge}</div>
+      ${cta}
+    </div>
+  </div>`
+}
+
+// 수강목록을 실데이터로 교체. 비어있거나 미로그인이면 정적 데모 유지.
+async function hydrateEnrollments(root: Element) {
+  const list = await fetchMyEnrollments()
+  if (!list) return // null = 미로그인/실패/빈 목록 → 정적 데모 보존
+
+  const grid = root.querySelector('[data-mycourses]')
+  if (grid) grid.innerHTML = list.map(cardHtml).join('')
+
+  // KPI "수강 중" = active 상태 수강건 수
+  const activeCount = list.filter((e) => e.status === 'active' && e.progress.pct < 100).length
+  const kpi = root.querySelector('[data-kpi-enrolled]')
+  if (kpi) kpi.innerHTML = `${activeCount}<small> 강</small>`
+}
+
 export default function Mypage() {
   useEffect(() => {
     initDashboard()
     initLiveSync()
+    const root = document.querySelector('[data-dashboard]')
+    if (!root) return
     // 로그인 유저가 있으면 인사·프로필 이름을 실제 이름으로(미로그인/데모면 기본값 유지)
     const name = getStoredUser()?.name?.trim()
     if (name && name !== '홍길동') {
-      const root = document.querySelector('[data-dashboard]')
-      root?.querySelectorAll('[data-username]').forEach((el) => {
+      root.querySelectorAll('[data-username]').forEach((el) => {
         el.textContent = name
       })
-      const input = root?.querySelector('[data-username-input]')
+      const input = root.querySelector('[data-username-input]')
       if (input instanceof HTMLInputElement) input.value = name
     }
+    // 수강목록 실데이터 연동(/me/enrollments). 폴백: 정적 데모.
+    void hydrateEnrollments(root)
   }, [])
   return <div data-dashboard dangerouslySetInnerHTML={{ __html: BODY }} />
 }

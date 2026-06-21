@@ -380,6 +380,34 @@ export async function fetchMyRewards(): Promise<Reward[]> {
   }
 }
 
+/* ===== 수강목록(enrollments) — 마이페이지, 로그인 유저 본인(세션) ===== */
+export interface Enrollment {
+  id: string
+  status: 'active' | 'expired' | 'cancelled'
+  purchased_at: string
+  expires_at: string | null
+  course: {
+    id: string
+    title: string
+    thumbnail_url: string | null
+    price: number
+  }
+  progress: { total: number; completed: number; pct: number }
+}
+
+/** 내 수강목록 + 진도율(GET /me/enrollments). 미로그인/실패/빈 목록이면 null(호출부가 정적 데모 유지). */
+export async function fetchMyEnrollments(): Promise<Enrollment[] | null> {
+  if (!getAccessToken()) return null
+  try {
+    const r = await authedFetch('/me/enrollments')
+    if (!r.ok) return null
+    const list = await r.json().catch(() => null)
+    return Array.isArray(list) && list.length > 0 ? (list as Enrollment[]) : null
+  } catch {
+    return null
+  }
+}
+
 /* ===== 관리자(admin) — 전역 JwtAuthGuard + RolesGuard('admin') (ADR 0011) =====
  * 401(미로그인)/403(권한없음)을 status로 구분해 호출부가 "관리자 권한 필요"를 표시한다. */
 export interface Cohort {
