@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchOpenOffer } from '../lib/api'
+import { initCourseCurriculum } from '../lib/engine'
 
 /** 강의 상세 — 미리보기·핵심지표·탭(커리큘럼/소개/수강평/Q&A)·구매카드.
  * 탭·아코디언·모두펼치기·담기·바로결제·토스트는 전역 클릭위임으로 동작.
- * 진도 기반 done/locked 데코는 진도 엔진(player) 포팅 시 연결. 지금은 신규(시작 전) 기본 상태. */
+ * 커리큘럼 done/현재/잠금·섹션 진척·단원평가 배지는 진도 엔진(epic-progress-v2)으로 동기화. */
 const MOBILE_STYLE = `@media(max-width:840px){.container[data-tabscope]{grid-template-columns:1fr!important}.card[data-buybox]{position:static!important}.mcta{display:flex}body{padding-bottom:74px}}`
 
 // 얼리버드 잔여석: /api/offers 실데이터. 로딩 실패 시 정적 기본값(37/100)을 유지한다.
@@ -12,6 +13,11 @@ const FALLBACK_SEATS = { left: 37, limit: 100, pct: 63 }
 
 export default function Course() {
   const [seats, setSeats] = useState(FALLBACK_SEATS)
+
+  useEffect(() => {
+    // 진도 기반 커리큘럼 동기화 (완료/현재/잠금·섹션 진척·단원평가 배지)
+    initCourseCurriculum()
+  }, [])
 
   useEffect(() => {
     let alive = true

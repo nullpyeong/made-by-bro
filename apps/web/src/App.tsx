@@ -8,6 +8,7 @@ import Course from './pages/Course'
 import Cart from './pages/Cart'
 import Checkout from './pages/Checkout'
 import Admin from './pages/Admin'
+import Player from './pages/Player'
 import Stub from './pages/Stub'
 
 export default function App() {
@@ -16,7 +17,7 @@ export default function App() {
       <Route element={<AppShell />}>
         <Route path="/" element={<Home />} />
         <Route path="/course" element={<Course />} />
-        <Route path="/player" element={<Stub title="강의실" />} />
+        <Route path="/player" element={<Player />} />
         <Route path="/mypage" element={<Stub title="마이페이지" />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
