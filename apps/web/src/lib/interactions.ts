@@ -4,6 +4,8 @@
  * React는 마크업(JSX)만 렌더하고, AppShell이 아래 init들을 effect로 연결한다.
  */
 
+import { logout as apiLogout } from './api'
+
 type NavigateFn = (to: string) => void
 
 /* ----- toast ----- */
@@ -199,6 +201,12 @@ export function mountGlobalHandlers(navigate: NavigateFn): () => void {
       if (m) m.style.display = 'none'
     } else if (act === 'theme') {
       toggleTheme()
+    } else if (act === 'logout') {
+      e.preventDefault()
+      apiLogout().finally(() => {
+        toast('로그아웃되었습니다')
+        navigate('/login')
+      })
     } else if (act === 'menu') {
       const d = document.getElementById('drawer')
       if (d) d.classList.add('open')

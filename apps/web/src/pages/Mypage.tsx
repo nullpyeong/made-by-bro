@@ -13,7 +13,7 @@ const BODY = `
   <a class="logo" href="/"><span class="ico mark"><svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M9 7.3v9.4l7.2-4.7z"/></svg></span><span class="wm"><b>EPIC<em>.</em></b><i>에픽영어교습소</i></span></a>
   <nav><a href="/">전체강의</a><a href="/qna">Q&A</a></nav>
   <input class="search" placeholder="강의 검색">
-  <div class="right"><button class="theme-toggle" data-act="theme" aria-label="다크모드 전환"><span class="moon"><i class="icn icn-moon"></i></span><span class="sun"><i class="icn icn-sun"></i></span></button><a class="cartnav" href="/cart" data-cartnav aria-label="장바구니"><i class="icn icn-cart"></i><span class="cc" data-cartcount-badge hidden>0</span></a><a class="bell" href="/mypage"><i class="icn icn-bell"></i><span class="dot"></span></a><span style="font-weight:600;color:var(--color-text)"><span data-username>홍길동</span> 님</span></div>
+  <div class="right"><button class="theme-toggle" data-act="theme" aria-label="다크모드 전환"><span class="moon"><i class="icn icn-moon"></i></span><span class="sun"><i class="icn icn-sun"></i></span></button><a class="cartnav" href="/cart" data-cartnav aria-label="장바구니"><i class="icn icn-cart"></i><span class="cc" data-cartcount-badge hidden>0</span></a><a class="bell" href="/mypage"><i class="icn icn-bell"></i><span class="dot"></span></a><span style="font-weight:600;color:var(--color-text)"><span data-username>홍길동</span> 님</span><button class="btn btn-ghost btn-sm" data-act="logout" style="margin-left:6px">로그아웃</button></div>
 </div></div>
 
 <div class="container" style="padding-top:30px">
@@ -159,7 +159,10 @@ const BODY = `
     <div class="card flat" style="padding:20px;max-width:420px">
       <div class="field"><label>이름</label><input class="input" data-username-input value="홍길동"></div>
       <div class="field"><label>이메일</label><input class="input" value="user@epic.com" disabled></div>
-      <button class="btn btn-primary" data-act="toast" data-msg="프로필을 저장했습니다">저장</button>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
+        <button class="btn btn-primary" data-act="toast" data-msg="프로필을 저장했습니다">저장</button>
+        <button class="btn btn-ghost" data-act="logout">로그아웃</button>
+      </div>
     </div>
   </div>
 </div>
