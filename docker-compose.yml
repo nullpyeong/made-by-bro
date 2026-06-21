@@ -1,0 +1,32 @@
+# made-by-bro 로컬 개발용 PostgreSQL
+# 사용법:
+#   docker compose up -d                         # DB 기동 (영구 볼륨)
+#   docker exec -i made-by-bro-db psql -U madebybro -d madebybro < design-docs/schema.sql   # 스키마 적용(최초 1회)
+#   docker compose down                          # 정지 (볼륨/데이터 유지)
+#   docker compose down -v                       # 정지 + 데이터 삭제(초기화)
+#
+# 접속 문자열(DATABASE_URL):
+#   postgresql://madebybro:madebybro@localhost:5432/madebybro?schema=public
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: made-by-bro-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: madebybro
+      POSTGRES_PASSWORD: madebybro
+      POSTGRES_DB: madebybro
+      # 한글 정렬/검색 정확도용 로케일
+      LANG: C.UTF-8
+    ports:
+      - "5432:5432"
+    volumes:
+      - made-by-bro-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U madebybro -d madebybro"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  made-by-bro-pgdata:
