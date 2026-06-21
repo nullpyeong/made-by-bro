@@ -1509,3 +1509,15 @@ td .minibar .bar{flex:1;max-width:90px}
   background:var(--color-surface);border:1px dashed var(--color-border)}
 .faq-more span{font-size:13.5px;color:var(--color-text-muted);font-weight:var(--w-medium)}
 @media(max-width:560px){.faq-more{flex-direction:column;align-items:stretch;text-align:center}}
+
+/* 마이페이지 — 연속학습 칩 */
+.streakchip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;
+  color:var(--color-accent);background:var(--color-accent-soft);
+  padding:4px 10px;border-radius:var(--radius-pill);letter-spacing:0}
+.streakchip .icn{width:13px;height:13px}
+/* 마이페이지 — 다음 단계(보조 학습 경로 안내) */
+.nextstep{display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  background:var(--color-surface-alt);border:1px solid var(--color-border);
+  border-radius:var(--radius-lg);padding:16px 20px}
+.nextstep-txt{flex:1;min-width:220px}
+@media(max-width:560px){.nextstep .btn{width:100%}}
