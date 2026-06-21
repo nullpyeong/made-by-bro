@@ -6,6 +6,9 @@ import { CoursesModule } from './courses/courses.module';
 import { OffersModule } from './offers/offers.module';
 import { ReferralsModule } from './referrals/referrals.module';
 import { CohortsModule } from './cohorts/cohorts.module';
+import { EventsModule } from './events/events.module';
+import { RewardsModule } from './rewards/rewards.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -15,6 +18,9 @@ import { CohortsModule } from './cohorts/cohorts.module';
     OffersModule,
     ReferralsModule,
     CohortsModule,
+    EventsModule,
+    RewardsModule,
+    AuthModule,
   ],
   controllers: [HealthController],
 })
