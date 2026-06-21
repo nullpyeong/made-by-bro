@@ -1,5 +1,27 @@
 import { useEffect } from 'react'
 import { initLesson } from '../lib/engine'
+import { recordActivation } from '../lib/api'
+
+// 첫 강의 수강(활성화) 백엔드 기록 1회 — ADR 0006 추천인 보상 트리거.
+// 영상이 정적 목업이라 "재생"의 충실한 신호 = 플레이어에 유효한 레슨이 처음 로드된 순간.
+// 미로그인(토큰 없음)이면 자동 건너뜀 → 인증 연동 후 첫 레슨 진입 시 발화.
+// 성공해야 플래그를 set(서버가 호출마다 퍼널 이벤트를 남기므로 중복 발화 방지).
+const ACTIVATION_FLAG = 'epic-activation-sent'
+async function maybeRecordActivation() {
+  try {
+    if (localStorage.getItem(ACTIVATION_FLAG) === '1') return
+  } catch {
+    return
+  }
+  const res = await recordActivation()
+  if (res.ok) {
+    try {
+      localStorage.setItem(ACTIVATION_FLAG, '1')
+    } catch {
+      /* localStorage 불가 환경 무시 */
+    }
+  }
+}
 
 /* 강의실(player) — 밝은 셸 + 다크 영상 프레임.
    정적 셸은 docs/pages/player.html 과 동일하게 주입하고, initLesson()이
@@ -83,6 +105,10 @@ const BODY = `
 export default function Player() {
   useEffect(() => {
     initLesson()
+    // 유효한 레슨이 로드된 뒤(=수강 시작) 활성화 1회 기록.
+    // initLesson()이 동기적으로 [data-lesson]에 data-lesson-id를 세팅한다.
+    const root = document.querySelector('[data-lesson]')
+    if (root?.getAttribute('data-lesson-id')) void maybeRecordActivation()
   }, [])
   return (
     <>

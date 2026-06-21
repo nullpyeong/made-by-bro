@@ -15,6 +15,7 @@
 | [0009](0009-orm-prisma.md) | ORM = Prisma | Engineering | ✅ 채택 | 2026-06-21 |
 | [0010](0010-web-포팅-CSS전략.md) | 웹 React 포팅 CSS 전략 (기존 app.css 재사용) | Engineering/Design | 🟡 검토중 | 2026-06-21 |
 | [0011](0011-인증-세션-토큰전략.md) | 인증·세션 토큰 전략 (JWT access + refresh 회전) | Engineering | 🟡 검토중 | 2026-06-21 |
+| [0012](0012-prisma-migrate-전환.md) | SQL-first → Prisma migrate 전환 (스키마 SSOT 이전) | Engineering | 🟡 검토중 | 2026-06-21 |
 
 ## 상태 범례
 - 🟡 `검토중` — 아직 안 정해짐
