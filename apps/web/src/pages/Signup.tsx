@@ -1,17 +1,20 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { LogoMark } from '../components/Nav'
-import { login, fetchMe, getKakaoAuthorizeUrl } from '../lib/api'
+import { signup } from '../lib/api'
 import { toast } from '../lib/interactions'
 
-/** 로그인 — SaaS 스플릿 레이아웃(좌 브랜드 패널 / 우 폼).
- * POST /auth/login → access/refresh JWT를 localStorage(epic-access-token)에 저장하고
- * GET /auth/me로 토큰을 검증한 뒤 학습 허브(마이페이지)로 이동한다.
- * 백엔드 미연결(네트워크 실패) 시엔 프로토타입 데모 입장으로 폴백한다(토큰 없이 진입). */
-export default function Login() {
+/** 회원가입 — Login과 동일한 SaaS 스플릿 레이아웃(좌 브랜드 / 우 폼).
+ * POST /auth/signup → 성공 시 자동 로그인(토큰 저장) 후 학습 허브로 이동.
+ * 추천코드(referralCode)는 선택 — 잘못된 코드여도 가입은 진행되고 안내만 띄운다(ADR 0006).
+ * URL ?ref=BRO-XXXX 로 들어오면 추천코드 칸을 자동 채운다(추천 링크 공유 동선). */
+export default function Signup() {
   const navigate = useNavigate()
+  const [params] = useSearchParams()
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [referralCode, setReferralCode] = useState(params.get('ref') ?? '')
   const [err, setErr] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -19,37 +22,37 @@ export default function Login() {
     e.preventDefault()
     if (loading) return
     setErr('')
-    if (!email.trim() || !password) {
-      setErr('이메일과 비밀번호를 입력해 주세요')
+    if (!name.trim() || !email.trim() || !password) {
+      setErr('이름·이메일·비밀번호를 모두 입력해 주세요')
+      return
+    }
+    if (password.length < 8) {
+      setErr('비밀번호는 8자 이상이어야 합니다')
       return
     }
     setLoading(true)
-    const res = await login(email.trim(), password)
+    const res = await signup({
+      name: name.trim(),
+      email: email.trim(),
+      password,
+      referralCode: referralCode.trim() || undefined,
+    })
     if (res.ok) {
-      // 발급된 access 토큰을 /auth/me로 검증(실패해도 로그인은 성공이므로 진입은 진행)
-      await fetchMe()
-      toast(`${res.user.name}님, 환영해요`)
+      toast(`${res.user.name}님, 가입을 환영해요`)
+      if (res.referralWarning) {
+        // 가입은 됐지만 추천코드 귀속만 실패 — 사용자에게 한 번 더 알림
+        setTimeout(() => toast(`추천코드 안내: ${res.referralWarning}`), 600)
+      }
       navigate('/mypage')
       return
     }
     if (res.reason === 'network') {
-      // 백엔드 미연결 — 프로토타입 데모 입장(토큰 없음 → activation은 no-auth로 건너뜀)
-      toast('데모 모드로 입장합니다 (백엔드 미연결)')
-      navigate('/mypage')
+      setErr('서버에 연결할 수 없어요. 잠시 후 다시 시도해 주세요')
+      setLoading(false)
       return
     }
     setErr(res.message)
     setLoading(false)
-  }
-
-  // 카카오 로그인 — 백엔드에서 인가 URL을 받아 리다이렉트(카카오 → /auth/kakao/callback).
-  async function handleKakao() {
-    const url = await getKakaoAuthorizeUrl()
-    if (url) {
-      window.location.href = url
-    } else {
-      toast('카카오 로그인을 사용할 수 없어요 (설정 확인 필요)')
-    }
   }
 
   return (
@@ -84,36 +87,36 @@ export default function Login() {
           </div>
           <div className="bz">
             <h2>
-              오늘도 한 걸음,
+              지금 시작하면,
               <br />
-              영어가 트이는 30일.
+              첫 강의는 무료로.
             </h2>
-            <p>매일 10분, 구간 퀴즈와 완청 인증으로 끝까지 완주하는 초·중등 영어 인강.</p>
+            <p>가입하고 맛보기 강의를 먼저 확인해 보세요. 부담 없는 30일 완주 설계.</p>
             <div className="pts">
               <div className="pt">
                 <span className="ck">
                   <i className="icn icn-check" />
                 </span>{' '}
-                13강 · 모바일·PC 무제한 수강
+                가입 즉시 맛보기 강의 열람
               </div>
               <div className="pt">
                 <span className="ck">
                   <i className="icn icn-check" />
                 </span>{' '}
-                1:1 강사 Q&amp;A + 수료증 발급
+                친구 추천코드로 함께 시작하면 혜택
               </div>
               <div className="pt">
                 <span className="ck">
                   <i className="icn icn-check" />
                 </span>{' '}
-                7일 이내 미수강 시 100% 환불
+                모바일·PC 어디서나 이어보기
               </div>
             </div>
           </div>
           <div className="qt">
-            "부담 없는 분량이라 처음으로 끝까지 완주했어요."
+            "맛보기를 보고 결정해서 후회가 없었어요."
             <br />
-            <span style={{ opacity: 0.8 }}>— 홍**, 데일리 영어회화 수강생</span>
+            <span style={{ opacity: 0.8 }}>— 김**, 데일리 영어회화 수강생</span>
           </div>
         </div>
 
@@ -121,10 +124,21 @@ export default function Login() {
         <div className="formside">
           <form className="formbox" onSubmit={handleSubmit}>
             <div style={{ marginBottom: 22 }}>
-              <h2 style={{ fontSize: 22, fontWeight: 800 }}>다시 오셨네요</h2>
+              <h2 style={{ fontSize: 22, fontWeight: 800 }}>회원가입</h2>
               <p className="muted" style={{ fontSize: 13.5, marginTop: 5 }}>
-                로그인하고 학습을 이어가세요
+                30초면 끝나요. 가입 후 바로 학습을 시작하세요
               </p>
+            </div>
+            <div className="field">
+              <label>이름</label>
+              <input
+                className="input"
+                type="text"
+                autoComplete="name"
+                placeholder="홍길동"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
             </div>
             <div className="field">
               <label>이메일</label>
@@ -142,37 +156,23 @@ export default function Login() {
               <input
                 className="input"
                 type="password"
-                autoComplete="current-password"
-                placeholder="••••••••"
+                autoComplete="new-password"
+                placeholder="8자 이상"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                fontSize: 12.5,
-                marginBottom: 18,
-              }}
-            >
-              <label
-                className="muted"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}
-              >
-                <input type="checkbox" /> 로그인 유지
+            <div className="field">
+              <label>
+                추천코드 <span className="muted" style={{ fontWeight: 400 }}>(선택)</span>
               </label>
-              <a
-                className="muted"
-                href="#"
-                onClick={(e) => e.preventDefault()}
-                data-act="toast"
-                data-msg="비밀번호 재설정 메일을 보냈습니다"
-                style={{ textDecoration: 'none' }}
-              >
-                비밀번호 찾기
-              </a>
+              <input
+                className="input"
+                type="text"
+                placeholder="BRO-XXXXXX"
+                value={referralCode}
+                onChange={(e) => setReferralCode(e.target.value)}
+              />
             </div>
             {err && (
               <div
@@ -184,7 +184,7 @@ export default function Login() {
                   border: '1px solid var(--color-danger, #d92d20)',
                   borderRadius: 10,
                   padding: '9px 12px',
-                  marginBottom: 12,
+                  margin: '4px 0 12px',
                 }}
               >
                 {err}
@@ -193,39 +193,24 @@ export default function Login() {
             <button
               type="submit"
               className="btn btn-grad btn-block"
-              style={{ marginBottom: 10, opacity: loading ? 0.7 : 1 }}
+              style={{ marginBottom: 10, marginTop: 4, opacity: loading ? 0.7 : 1 }}
               disabled={loading}
             >
-              {loading ? '로그인 중…' : <>로그인 <span className="arr">→</span></>}
-            </button>
-            <div className="divider-or">또는</div>
-            <button
-              type="button"
-              style={{
-                width: '100%',
-                background: '#fee500',
-                color: '#3c1e1e',
-                border: 'none',
-                textAlign: 'center',
-                padding: 13,
-                borderRadius: 'var(--radius-pill)',
-                fontWeight: 700,
-                fontSize: 13.5,
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-                transition: 'transform .15s ease',
-              }}
-              onClick={handleKakao}
-            >
-              <i className="icn icn-message" /> 카카오로 3초 만에 시작
+              {loading ? (
+                '가입 중…'
+              ) : (
+                <>
+                  가입하고 시작하기 <span className="arr">→</span>
+                </>
+              )}
             </button>
             <div className="center muted" style={{ fontSize: 12.5, marginTop: 20 }}>
-              아직 회원이 아니신가요?{' '}
+              이미 회원이신가요?{' '}
               <Link
-                to="/signup"
+                to="/login"
                 style={{ color: 'var(--color-primary)', fontWeight: 700, textDecoration: 'none' }}
               >
-                이메일로 회원가입
+                로그인
               </Link>
             </div>
           </form>
