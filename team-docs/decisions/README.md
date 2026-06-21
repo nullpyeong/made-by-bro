@@ -13,6 +13,7 @@
 | [0007](0007-원장-신뢰콘텐츠-임시값.md) | 원장 신뢰 콘텐츠 (사진·신뢰지표·스토리 임시값) | Content/Design/Marketing | 🟡 검토중 | 2026-06-21 |
 | [0008](0008-커머스-모델-단건과-멤버십.md) | 커머스 모델 — 단건 + 멤버십(구독) 병행 구조 | Engineering/Product | ✅ 채택 | 2026-06-21 |
 | [0009](0009-orm-prisma.md) | ORM = Prisma | Engineering | ✅ 채택 | 2026-06-21 |
+| [0010](0010-web-포팅-CSS전략.md) | 웹 React 포팅 CSS 전략 (기존 app.css 재사용) | Engineering/Design | 🟡 검토중 | 2026-06-21 |
 
 ## 상태 범례
 - 🟡 `검토중` — 아직 안 정해짐
