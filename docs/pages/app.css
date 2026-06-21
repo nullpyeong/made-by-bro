@@ -1164,8 +1164,15 @@ td .minibar .bar{flex:1;max-width:90px}
   background:var(--grad-brand);color:#fff;box-shadow:var(--shadow-md);margin-bottom:22px;overflow:hidden;position:relative}
 .resume::after{content:"";position:absolute;right:-40px;top:-60px;width:220px;height:220px;border-radius:50%;
   background:radial-gradient(circle,rgba(255,255,255,.18),transparent 70%);pointer-events:none}
-.resume .rthumb{width:118px;height:74px;border-radius:var(--radius-md);flex-shrink:0;
-  background:rgba(255,255,255,.16);display:grid;place-items:center;font-size:26px;backdrop-filter:blur(2px)}
+.resume .rthumb{width:128px;height:78px;border-radius:var(--radius-md);flex-shrink:0;position:relative;
+  background-size:cover;background-position:center;display:grid;place-items:center;overflow:hidden;
+  box-shadow:0 4px 14px rgba(8,18,40,.22)}
+.resume .rthumb::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,18,40,.12),rgba(8,18,40,.46))}
+.resume .rthumb .rplay{position:relative;z-index:1;width:40px;height:40px;border-radius:50%;
+  background:rgba(255,255,255,.94);color:var(--color-primary);display:grid;place-items:center;
+  box-shadow:0 4px 12px rgba(0,0,0,.25);transition:transform .2s var(--ease-out,ease)}
+.resume:hover .rthumb .rplay{transform:scale(1.08)}
+.resume .rthumb .rplay .icn{width:18px;height:18px}
 .resume .rbody{flex:1;min-width:0;position:relative;z-index:1}
 .resume .rk{font-size:11.5px;font-weight:700;opacity:.9;letter-spacing:.02em}
 .resume .rt{font-size:17px;font-weight:800;margin:3px 0 9px;letter-spacing:var(--tracking-tight)}
@@ -1203,21 +1210,27 @@ td .minibar .bar{flex:1;max-width:90px}
 
 /* ===== mypage: 주간 학습 히트맵 ===== */
 .panel-card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:20px}
-.weekgrid{display:flex;gap:10px;margin-top:14px}
-.weekgrid .wd{flex:1;text-align:center}
-.weekgrid .cell{height:46px;border-radius:var(--radius-md);background:var(--color-surface-alt);
-  display:grid;place-items:center;font-size:11px;font-weight:800;color:var(--color-text-muted);margin-bottom:6px}
-.weekgrid .cell.l1{background:var(--color-primary-soft);color:var(--color-primary)}
-.weekgrid .cell.l2{background:color-mix(in srgb,var(--color-primary) 45%,var(--color-surface));color:#fff}
-.weekgrid .cell.l3{background:var(--color-primary);color:#fff}
-.weekgrid .cell.today{outline:2px solid var(--color-accent);outline-offset:2px}
+/* 이번 주 학습 — 일별 학습량 막대 차트 */
+.weekgrid{display:flex;gap:8px;margin-top:16px;align-items:flex-end}
+.weekgrid .wcol{flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;min-width:0}
+.weekgrid .wval{font-size:11px;font-weight:700;color:var(--color-text-subtle);height:14px;line-height:14px}
+.weekgrid .wtrack{width:100%;max-width:38px;height:80px;background:var(--color-surface-alt);
+  border-radius:9px;display:flex;align-items:flex-end;overflow:hidden}
+.weekgrid .wbar{width:100%;border-radius:9px;background:var(--color-primary-soft);min-height:0;
+  transition:height .6s cubic-bezier(.22,.72,.2,1)}
+.weekgrid .wbar.l1{background:var(--color-primary-soft)}
+.weekgrid .wbar.l2{background:color-mix(in srgb,var(--color-primary) 50%,var(--color-surface))}
+.weekgrid .wbar.l3{background:linear-gradient(180deg,var(--blue-400),var(--blue-600))}
 .weekgrid .dl{font-size:11px;color:var(--color-text-muted);font-weight:600}
-.heatlegend{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--color-text-muted);margin-top:12px;justify-content:flex-end}
+.weekgrid .wcol.today .wtrack{outline:2px solid var(--color-accent);outline-offset:2px}
+.weekgrid .wcol.today .wval,.weekgrid .wcol.today .dl{color:var(--color-primary);font-weight:800}
+.weekgrid .wcol.future{opacity:.55}
+.heatlegend{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--color-text-muted);margin-top:13px;justify-content:flex-end}
 .heatlegend i{width:13px;height:13px;border-radius:3px;display:inline-block}
 .heatlegend i.h0{background:var(--color-surface-alt)}
 .heatlegend i.h1{background:var(--color-primary-soft)}
-.heatlegend i.h2{background:color-mix(in srgb,var(--color-primary) 45%,var(--color-surface))}
-.heatlegend i.h3{background:var(--color-primary)}
+.heatlegend i.h2{background:color-mix(in srgb,var(--color-primary) 50%,var(--color-surface))}
+.heatlegend i.h3{background:var(--blue-600)}
 
 /* ===== 결제 완료(수강 시작) ===== */
 .success{text-align:center;padding:14px 0 28px}

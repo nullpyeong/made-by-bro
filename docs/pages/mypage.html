@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>마이페이지 · EPIC</title>
-<link rel="stylesheet" href="../design/tokens.css?v=38">
-<link rel="stylesheet" href="app.css?v=38">
+<link rel="stylesheet" href="../design/tokens.css?v=39">
+<link rel="stylesheet" href="app.css?v=39">
 <script>(function(){try{if(localStorage.getItem('epic-reset3')!=='1'){localStorage.removeItem('epic-theme');localStorage.removeItem('epic-theme-v2');localStorage.setItem('epic-reset3','1');}var t=localStorage.getItem('epic-theme-v2');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
 </head>
 <body data-dashboard>
@@ -25,7 +25,7 @@
 
   <!-- 이어보기 히어로 (resume-first) -->
   <div class="resume" style="margin-bottom:18px">
-    <div class="rthumb"><i class="icn icn-play"></i></div>
+    <div class="rthumb" style="background-image:url(assets/course-conversation.jpg)"><span class="rplay"><i class="icn icn-play"></i></span></div>
     <div class="rbody">
       <div class="rk">이어서 학습 · 초·중등 데일리 영어회화 30일</div>
       <div class="rt">2-1. 교실에서 선생님께 질문하기</div>
@@ -82,18 +82,18 @@
 
     <!-- 이번 주 학습 (풀폭) -->
     <div class="panel-card" style="margin-top:18px">
-      <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
         <b style="font-size:14.5px">이번 주 학습</b>
-        <span class="muted" style="font-size:12px">주간 목표 <b style="color:var(--color-text)">5일</b> 중 <b style="color:var(--color-primary)" data-week-done>4</b>일 완료</span>
+        <span class="muted" style="font-size:12px">이번 주 <b style="color:var(--color-primary)"><span data-week-total>95</span>분</b> · 주간 목표 <b style="color:var(--color-text)">5일</b> 중 <b style="color:var(--color-primary)" data-week-done>4</b>일 완료</span>
       </div>
       <div class="weekgrid" data-weekgrid>
-        <div class="wd"><div class="cell l2">25</div><div class="dl">월</div></div>
-        <div class="wd"><div class="cell l1">12</div><div class="dl">화</div></div>
-        <div class="wd"><div class="cell l3">31</div><div class="dl">수</div></div>
-        <div class="wd"><div class="cell l2">18</div><div class="dl">목</div></div>
-        <div class="wd"><div class="cell">0</div><div class="dl">금</div></div>
-        <div class="wd"><div class="cell today l1">9</div><div class="dl">토</div></div>
-        <div class="wd"><div class="cell">·</div><div class="dl">일</div></div>
+        <div class="wcol"><div class="wval">25</div><div class="wtrack"><i class="wbar l2" style="height:81%"></i></div><div class="dl">월</div></div>
+        <div class="wcol"><div class="wval">12</div><div class="wtrack"><i class="wbar l1" style="height:39%"></i></div><div class="dl">화</div></div>
+        <div class="wcol"><div class="wval">31</div><div class="wtrack"><i class="wbar l3" style="height:100%"></i></div><div class="dl">수</div></div>
+        <div class="wcol"><div class="wval">18</div><div class="wtrack"><i class="wbar l2" style="height:58%"></i></div><div class="dl">목</div></div>
+        <div class="wcol"><div class="wval">0</div><div class="wtrack"><i class="wbar" style="height:0%"></i></div><div class="dl">금</div></div>
+        <div class="wcol today"><div class="wval">9</div><div class="wtrack"><i class="wbar l1" style="height:29%"></i></div><div class="dl">토</div></div>
+        <div class="wcol future"><div class="wval"></div><div class="wtrack"><i class="wbar" style="height:0%"></i></div><div class="dl">일</div></div>
       </div>
       <div class="heatlegend">적음 <i class="h0"></i><i class="h1"></i><i class="h2"></i><i class="h3"></i> 많음 <span style="margin-left:8px">(분 단위)</span></div>
     </div>
@@ -230,6 +230,6 @@
     </div>
   </div>
 </div>
-<script src="app.js?v=38"></script>
+<script src="app.js?v=39"></script>
 </body>
 </html>

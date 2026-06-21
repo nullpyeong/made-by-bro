@@ -1451,15 +1451,20 @@ function initDashboard(){
   const bars=root.querySelector('[data-streakbars]');
   if(bars){ bars.innerHTML=''; for(let i=0;i<7;i++){ const b=document.createElement('i'); if(i<Math.min(streak,7)) b.className='on'; bars.appendChild(b); } }
 
-  // 이번 주 히트맵
-  const wg=root.querySelector('[data-weekgrid]');
-  if(wg){ const wk=weekDays(); wg.innerHTML=wk.map(d=>{
-      const lv=heatLevel(d.min); const cls=['cell',lv,d.today?'today':''].filter(Boolean).join(' ');
-      const txt=d.future?'·':(d.min>0?d.min:'0');
-      return '<div class="wd"><div class="'+cls+'">'+txt+'</div><div class="dl">'+d.label+'</div></div>';
-    }).join(''); }
-  const studiedDays=weekDays().filter(d=>d.min>0).length;
+  // 이번 주 학습 — 일별 학습량 막대 차트
+  const wg=root.querySelector('[data-weekgrid]'); const wk=weekDays();
+  const wkMax=Math.max(40,...wk.map(d=>d.min)); let wkTotal=0;
+  if(wg){ wg.innerHTML=wk.map(d=>{
+      wkTotal+=d.min;
+      const lv=heatLevel(d.min);
+      const h=d.min>0?Math.max(14,Math.round(d.min/wkMax*100)):0;
+      const cls=['wcol',d.today?'today':'',d.future?'future':''].filter(Boolean).join(' ');
+      const val=d.future?'':(d.min>0?d.min:'0');
+      return '<div class="'+cls+'"><div class="wval">'+val+'</div><div class="wtrack"><i class="wbar '+lv+'" style="height:'+h+'%"></i></div><div class="dl">'+d.label+'</div></div>';
+    }).join(''); } else { wk.forEach(d=>wkTotal+=d.min); }
+  const studiedDays=wk.filter(d=>d.min>0).length;
   set('[data-week-done]',e=>e.textContent=studiedDays);
+  set('[data-week-total]',e=>e.textContent=wkTotal);
 
   // 전 과정 마스터 배지/배너
   const mc=root.querySelector('[data-master]');
