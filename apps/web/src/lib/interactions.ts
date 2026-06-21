@@ -75,6 +75,9 @@ export function addToCart(item: CartItem): boolean {
   setCart(c, true)
   return true
 }
+export function clearCart() {
+  setCart([], false)
+}
 export function updateCartBadges(pop?: boolean) {
   const n = getCart().length
   document.querySelectorAll<HTMLElement>('[data-cartcount-badge]').forEach((b) => {
