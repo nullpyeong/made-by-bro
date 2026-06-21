@@ -5,9 +5,12 @@ import {
   Get,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { EventsService } from './events.service';
 import { Public } from '../auth/public.decorator';
+import { Roles } from '../auth/roles.decorator';
+import { RolesGuard } from '../auth/roles.guard';
 
 // 인증 도입 전: userId는 바디/쿼리로 받는다(추후 세션 주입).
 function toBigIntOpt(v: unknown, field: string): bigint | null {
@@ -51,9 +54,9 @@ export class EventsController {
     });
   }
 
-  // 퍼널 집계(전체 또는 cohortId 한정) — Data 대시보드.
-  // TODO(ADR 0011 후속): 관리자 role 가드. 현재는 임시 공개.
-  @Public()
+  // 퍼널 집계(전체 또는 cohortId 한정) — Data 대시보드(관리자 전용, ADR 0011).
+  @Roles('admin')
+  @UseGuards(RolesGuard)
   @Get('funnel')
   funnel(@Query('cohortId') cohortId?: string) {
     return this.events.funnel(toBigIntOpt(cohortId, 'cohortId') ?? undefined);

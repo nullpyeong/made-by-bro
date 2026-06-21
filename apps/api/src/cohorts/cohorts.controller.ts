@@ -1,6 +1,15 @@
-import { BadRequestException, Body, Controller, Get, Param, Post } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { CohortsService } from './cohorts.service';
-import { Public } from '../auth/public.decorator';
+import { Roles } from '../auth/roles.decorator';
+import { RolesGuard } from '../auth/roles.guard';
 
 function toId(v: unknown, field: string): bigint {
   try {
@@ -10,9 +19,10 @@ function toId(v: unknown, field: string): bigint {
   }
 }
 
-// 코호트는 운영(관리자) 기능.
-// TODO(ADR 0011 후속): 관리자 role 가드. 현재는 컨트롤러 전체 임시 공개.
-@Public()
+// 코호트는 운영(관리자) 기능. 컨트롤러 전체 admin 전용(ADR 0011).
+// 전역 JwtAuthGuard(로그인) + RolesGuard('admin').
+@Roles('admin')
+@UseGuards(RolesGuard)
 @Controller('cohorts')
 export class CohortsController {
   constructor(private readonly cohorts: CohortsService) {}

@@ -9,6 +9,7 @@ import { CohortsModule } from './cohorts/cohorts.module';
 import { EventsModule } from './events/events.module';
 import { RewardsModule } from './rewards/rewards.module';
 import { AuthModule } from './auth/auth.module';
+import { PaymentsModule } from './payments/payments.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { AuthModule } from './auth/auth.module';
     EventsModule,
     RewardsModule,
     AuthModule,
+    PaymentsModule,
   ],
   controllers: [HealthController],
 })

@@ -7,7 +7,8 @@ import { AppModule } from './app.module';
 };
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  // rawBody: true → req.rawBody(Buffer) 보존. 결제 웹훅 HMAC 서명 검증에 필요(ADR 0013).
+  const app = await NestFactory.create(AppModule, { rawBody: true });
   // 프론트(정적 랜딩 file://·GitHub Pages, Vite dev)에서 /api 호출 허용.
   // 운영에선 CORS_ORIGIN(쉼표구분)으로 화이트리스트. 미설정 시 dev 편의로 전체 허용.
   const origins = (process.env.CORS_ORIGIN ?? '')

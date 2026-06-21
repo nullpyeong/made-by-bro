@@ -14,8 +14,9 @@
 | [0008](0008-커머스-모델-단건과-멤버십.md) | 커머스 모델 — 단건 + 멤버십(구독) 병행 구조 | Engineering/Product | ✅ 채택 | 2026-06-21 |
 | [0009](0009-orm-prisma.md) | ORM = Prisma | Engineering | ✅ 채택 | 2026-06-21 |
 | [0010](0010-web-포팅-CSS전략.md) | 웹 React 포팅 CSS 전략 (기존 app.css 재사용) | Engineering/Design | 🟡 검토중 | 2026-06-21 |
-| [0011](0011-인증-세션-토큰전략.md) | 인증·세션 토큰 전략 (JWT access + refresh 회전) | Engineering | 🟡 검토중 | 2026-06-21 |
+| [0011](0011-인증-세션-토큰전략.md) | 인증·세션 토큰 전략 (JWT access + refresh 회전) | Engineering | ✅ 채택 | 2026-06-21 |
 | [0012](0012-prisma-migrate-전환.md) | SQL-first → Prisma migrate 전환 (스키마 SSOT 이전) | Engineering | 🟡 검토중 | 2026-06-21 |
+| [0013](0013-결제-웹훅-서명검증.md) | 결제 웹훅 검증 (HMAC 서명 + fail-closed) | Engineering | 🟡 검토중 | 2026-06-21 |
 
 ## 상태 범례
 - 🟡 `검토중` — 아직 안 정해짐

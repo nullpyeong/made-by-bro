@@ -5,10 +5,12 @@ import {
   Get,
   Param,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import { RewardsService } from './rewards.service';
-import { Public } from '../auth/public.decorator';
 import { CurrentUser, AuthUser } from '../auth/current-user.decorator';
+import { Roles } from '../auth/roles.decorator';
+import { RolesGuard } from '../auth/roles.guard';
 
 function toId(v: unknown, field: string): bigint {
   try {
@@ -40,11 +42,13 @@ export class RewardsController {
     return this.rewards.listForUser(user.id);
   }
 
-  // --- 아래는 서버/관리자 트리거(결제 웹훅·운영). 세션이 아닌 별도 인증 필요 ---
-  // TODO(ADR 0011 후속): 결제 웹훅 서명/관리자 role 가드로 보호. 현재는 임시 공개.
+  // --- 아래는 관리자/운영 전용 (ADR 0011/0013). 전역 JwtAuthGuard + RolesGuard('admin') ---
+  // 자동 전환(CAC)은 결제 웹훅(POST /payments/webhook/toss)이 서명 검증 후
+  // RewardsService.recordConversion을 직접 호출한다. 아래 conversion 엔드포인트는 수동 백필/운영용.
 
-  // 피추천자 유료 전환 기록(CAC) — 결제 확정 후 서버가 호출.
-  @Public()
+  // 피추천자 유료 전환 기록(CAC) — 관리자 수동 백필.
+  @Roles('admin')
+  @UseGuards(RolesGuard)
   @Post('conversion')
   conversion(
     @Body('userId') userId: unknown,
@@ -57,14 +61,16 @@ export class RewardsController {
   }
 
   // 수동/관리자 보상 지급.
-  @Public()
+  @Roles('admin')
+  @UseGuards(RolesGuard)
   @Post('grant')
   grant(@Body('referralId') referralId: unknown) {
     return this.rewards.grantManual(toId(referralId, 'referralId'));
   }
 
-  // 보상 사용 처리(granted → redeemed) — 구독 연장 적용 시.
-  @Public()
+  // 보상 사용 처리(granted → redeemed) — 구독 연장 적용(시스템/관리자).
+  @Roles('admin')
+  @UseGuards(RolesGuard)
   @Post(':id/redeem')
   redeem(@Param('id') id: string) {
     return this.rewards.redeemReward(toId(id, 'id'));
