@@ -408,6 +408,103 @@ CREATE TABLE announcements (
   created_at TIMESTAMPTZ  NOT NULL DEFAULT now()
 );
 
+-- ================================================================
+-- [0006] 콜드스타트 캠페인 — 얼리버드 / 시딩 / 추천 / 활성화 (ADR 0006, G2~G5)
+--   * 0006 = 오프라인 60명 시딩 → 활성화 → 후기·추천 → 외부 유료·CAC 측정.
+--   * offers=진짜 희소성(선착순), referral=입소문 추적, events=활성화/CAC 원천.
+-- ================================================================
+CREATE TYPE offer_status    AS ENUM ('open', 'sold_out', 'closed');
+CREATE TYPE cohort_status   AS ENUM ('active', 'completed', 'archived');
+CREATE TYPE referral_status AS ENUM ('pending', 'signed_up', 'activated', 'converted', 'rewarded');
+CREATE TYPE reward_kind     AS ENUM ('sub_extension', 'discount');     -- 비현금 보상만(ADR 0006 확정): 무료기간 연장 / 할인
+CREATE TYPE reward_status   AS ENUM ('pending', 'granted', 'redeemed', 'revoked');
+
+-- 21) offers — 선착순 한정 오퍼(얼리버드/기수제). course.html '37/100' 하드코딩을 실데이터화.
+CREATE TABLE offers (
+  id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  course_id   BIGINT       REFERENCES courses(id) ON DELETE CASCADE,   -- NULL = 멤버십/전체 대상 오퍼
+  name        VARCHAR(120) NOT NULL,                                   -- '얼리버드 1기'
+  price       INTEGER      NOT NULL CHECK (price >= 0),                -- 얼리버드가(원)
+  seat_limit  INTEGER      NOT NULL CHECK (seat_limit > 0),            -- 선착순 한도(예: 100)
+  seat_taken  INTEGER      NOT NULL DEFAULT 0 CHECK (seat_taken >= 0), -- 결제확정 트랜잭션서 +1
+  status      offer_status NOT NULL DEFAULT 'open',
+  starts_at   TIMESTAMPTZ,
+  ends_at     TIMESTAMPTZ,
+  created_at  TIMESTAMPTZ  NOT NULL DEFAULT now(),
+  updated_at  TIMESTAMPTZ  NOT NULL DEFAULT now(),
+  CHECK (seat_taken <= seat_limit)
+);
+-- 잔여석 = seat_limit - seat_taken. 결제확정 시 UPDATE ... WHERE seat_taken < seat_limit 로 오버부킹 차단.
+
+ALTER TABLE payments ADD COLUMN offer_id BIGINT REFERENCES offers(id) ON DELETE SET NULL; -- 어떤 오퍼로 결제했나(귀속)
+
+-- 22) cohorts / 23) cohort_members — 시딩 코호트(레벨·학년·기수별 순차 개방, ADR 0006 확정: 코호트 분할)
+CREATE TABLE cohorts (
+  id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  name       VARCHAR(120)  NOT NULL,                      -- '오프라인 시딩 1기(초등 고학년)'
+  status     cohort_status NOT NULL DEFAULT 'active',
+  notes      TEXT,
+  started_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ   NOT NULL DEFAULT now()
+);
+
+CREATE TABLE cohort_members (
+  id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  cohort_id  BIGINT      NOT NULL REFERENCES cohorts(id) ON DELETE CASCADE,
+  user_id    BIGINT      NOT NULL REFERENCES users(id)   ON DELETE CASCADE,
+  joined_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (cohort_id, user_id)
+);
+-- 60명 시딩 = cohort_members + subscriptions.source='seed'(billing_key NULL, period_end=+3개월) 조합.
+
+-- 24) referral_codes / 25) referrals / 26) rewards — 추천 엔진(60명 각자 코드 → 입소문 추적)
+CREATE TABLE referral_codes (
+  id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  user_id    BIGINT      NOT NULL REFERENCES users(id) ON DELETE CASCADE,  -- 코드 소유자(추천인)
+  code       VARCHAR(40) NOT NULL UNIQUE,                                  -- 'BRO-XXXX'
+  is_active  BOOLEAN     NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (user_id)            -- 1인 1코드
+);
+
+CREATE TABLE referrals (
+  id                   BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  code_id              BIGINT          NOT NULL REFERENCES referral_codes(id) ON DELETE CASCADE,
+  referrer_user_id     BIGINT          NOT NULL REFERENCES users(id) ON DELETE CASCADE,  -- 추천한 사람
+  referred_user_id     BIGINT          REFERENCES users(id) ON DELETE SET NULL,          -- 추천받아 가입한 사람(가입 전이면 NULL)
+  status               referral_status NOT NULL DEFAULT 'pending',
+  converted_payment_id BIGINT          REFERENCES payments(id) ON DELETE SET NULL,       -- 유료 전환 결제(CAC 귀속)
+  created_at           TIMESTAMPTZ     NOT NULL DEFAULT now(),
+  updated_at           TIMESTAMPTZ     NOT NULL DEFAULT now(),
+  UNIQUE (referred_user_id)        -- 피추천자 1명은 1건만 귀속(중복/자기추천 방지)
+);
+
+CREATE TABLE rewards (
+  id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  user_id     BIGINT        NOT NULL REFERENCES users(id) ON DELETE CASCADE,   -- 보상 수령자
+  referral_id BIGINT        REFERENCES referrals(id) ON DELETE SET NULL,       -- 어떤 추천으로 발생했나
+  kind        reward_kind   NOT NULL,                                          -- 비현금만: 연장/할인
+  status      reward_status NOT NULL DEFAULT 'pending',
+  amount      INTEGER       CHECK (amount IS NULL OR amount >= 0),             -- sub_extension=연장 일수 / discount=할인액(원)
+  note        VARCHAR(200),
+  granted_at  TIMESTAMPTZ,
+  redeemed_at TIMESTAMPTZ,
+  created_at  TIMESTAMPTZ   NOT NULL DEFAULT now()
+);
+-- ADR 0006: 추천 보상은 현금 X → '무료기간 연장' 또는 '할인'만(학부모 정서 리스크 회피).
+
+-- 27) events — 활성화/퍼널/CAC 측정 원천(Data 렌즈). 유연 로그.
+CREATE TABLE events (
+  id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  user_id     BIGINT       REFERENCES users(id) ON DELETE SET NULL,  -- 익명(가입 전)이면 NULL
+  type        VARCHAR(40)  NOT NULL,   -- activation_first_lecture / referral_click / referral_signup / paid_conversion / review_submitted
+  ref_table   VARCHAR(30),             -- 관련 엔터티(referral/offer/cohort/lecture)
+  ref_id      BIGINT,
+  props       JSONB        NOT NULL DEFAULT '{}',
+  occurred_at TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
+-- M1 활성화율 / M2 후기·추천 / M3 CAC 를 이 로그 + payments 귀속으로 산출.
+
 -- ----------------------------------------------------------------
 -- 인덱스 (조회 패턴 기준)
 -- ----------------------------------------------------------------
@@ -439,6 +536,16 @@ CREATE INDEX idx_certificates_user     ON certificates (user_id);
 CREATE INDEX idx_user_sessions_user    ON user_sessions (user_id);
 CREATE INDEX idx_notifications_unread  ON notifications (user_id) WHERE is_read = false;
 CREATE INDEX idx_announcements_course  ON announcements (course_id);
+-- [0006] 얼리버드/시딩/추천/활성화
+CREATE INDEX idx_offers_course         ON offers (course_id) WHERE status = 'open';
+CREATE INDEX idx_payments_offer        ON payments (offer_id);
+CREATE INDEX idx_cohort_members_user   ON cohort_members (user_id);
+CREATE INDEX idx_cohort_members_cohort ON cohort_members (cohort_id);
+CREATE INDEX idx_referrals_referrer    ON referrals (referrer_user_id);
+CREATE INDEX idx_referrals_status      ON referrals (status);
+CREATE INDEX idx_rewards_user          ON rewards (user_id) WHERE status IN ('pending', 'granted');
+CREATE INDEX idx_events_type_time      ON events (type, occurred_at);
+CREATE INDEX idx_events_user           ON events (user_id);
 
 -- ----------------------------------------------------------------
 -- updated_at 트리거
@@ -452,6 +559,8 @@ CREATE TRIGGER trg_subscriptions_updated BEFORE UPDATE ON subscriptions FOR EACH
 CREATE TRIGGER trg_progress_updated   BEFORE UPDATE ON progress  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 CREATE TRIGGER trg_reviews_updated    BEFORE UPDATE ON reviews   FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 CREATE TRIGGER trg_qna_updated        BEFORE UPDATE ON qna       FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+CREATE TRIGGER trg_offers_updated     BEFORE UPDATE ON offers    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+CREATE TRIGGER trg_referrals_updated  BEFORE UPDATE ON referrals FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 COMMIT;
 
@@ -483,4 +592,12 @@ COMMIT;
 --    - 해지: cancel_at_period_end=true 로 예약(기간말 종료, 잔여기간은 접근 유지). 즉시환불은 단건 비례환불과 별도 정책.
 --    - 만료 배치: current_period_end < now() AND status IN('active','past_due') → status='expired'.
 --    - 등급제(특정 코스만 멤버십) 필요 시: plan_courses(plan_id, course_id) 매핑 테이블 추가로 확장.
+--  * [콜드스타트 캠페인 — ADR 0006]
+--    - 얼리버드 잔여석: offers.seat_limit - seat_taken. 결제확정 트랜잭션서
+--        UPDATE offers SET seat_taken=seat_taken+1 WHERE id=? AND seat_taken<seat_limit (영향행 0이면 만석→거부).
+--        만석 시 status='sold_out'으로 전환, 다음 기수는 새 offers row. (course.html '37/100' 하드코딩 대체)
+--    - 60명 시딩: cohort_members 등록 + subscriptions(source='seed', billing_key NULL, period_end=가입+3개월).
+--    - 추천: referral_codes(1인1코드) → referrals(referred_user_id UNIQUE=중복귀속 차단) →
+--        유료 전환 시 referrals.converted_payment_id 로 CAC 귀속. 보상은 rewards(비현금: sub_extension/discount).
+--    - 측정(Data): events(type별) + payments 귀속으로 M1 활성화율 / M2 후기·추천 / M3 CAC 산출.
 -- ================================================================
