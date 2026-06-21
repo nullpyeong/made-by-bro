@@ -78,6 +78,12 @@ export function addToCart(item: CartItem): boolean {
 export function clearCart() {
   setCart([], false)
 }
+export function removeFromCart(name: string) {
+  setCart(
+    getCart().filter((x) => x.name !== name),
+    false,
+  )
+}
 export function updateCartBadges(pop?: boolean) {
   const n = getCart().length
   document.querySelectorAll<HTMLElement>('[data-cartcount-badge]').forEach((b) => {

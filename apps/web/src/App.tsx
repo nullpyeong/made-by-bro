@@ -5,6 +5,8 @@ import Login from './pages/Login'
 import Qna from './pages/Qna'
 import Complete from './pages/Complete'
 import Course from './pages/Course'
+import Cart from './pages/Cart'
+import Checkout from './pages/Checkout'
 import Admin from './pages/Admin'
 import Stub from './pages/Stub'
 
@@ -16,8 +18,8 @@ export default function App() {
         <Route path="/course" element={<Course />} />
         <Route path="/player" element={<Stub title="강의실" />} />
         <Route path="/mypage" element={<Stub title="마이페이지" />} />
-        <Route path="/cart" element={<Stub title="장바구니" />} />
-        <Route path="/checkout" element={<Stub title="결제" />} />
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/checkout" element={<Checkout />} />
         <Route path="/complete" element={<Complete />} />
         <Route path="/login" element={<Login />} />
         <Route path="/qna" element={<Qna />} />
