@@ -269,9 +269,11 @@ function cardHtml(e: Enrollment): string {
   else badge = `<span class="badge gray">D-${d}</span>`
 
   const barClass = pct >= 100 ? 'done' : ''
+  // 리얼 모드 플레이어로 연결 — 실제 course id를 넘겨 DB 커리큘럼/진도를 구동.
+  const href = `/player?course=${encodeURIComponent(e.course.id)}`
   const cta = done
-    ? '<a class="btn btn-ghost btn-block btn-sm" href="/player" style="margin-top:10px">다시보기</a>'
-    : '<a class="btn btn-primary btn-block btn-sm" href="/player" style="margin-top:10px">이어보기</a>'
+    ? `<a class="btn btn-ghost btn-block btn-sm" href="${href}" style="margin-top:10px">다시보기</a>`
+    : `<a class="btn btn-primary btn-block btn-sm" href="${href}" style="margin-top:10px">이어보기</a>`
 
   return `<div class="cc" style="cursor:default">
     <div class="th photo" style="background-image:url(${esc(thumb)})"><span class="lv">${lv}</span></div>

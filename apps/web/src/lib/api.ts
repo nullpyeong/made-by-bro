@@ -442,6 +442,71 @@ export async function saveProgress(input: {
   }
 }
 
+/* ===== 커리큘럼(curriculum) — 플레이어 리얼 모드 =====
+ * GET /courses/:id/curriculum (공개) → 섹션→강의를 실제 DB id로.
+ * 이 id가 진도(/me/progress)의 실제 lectures.id가 되어 자동 적재를 가능케 한다. */
+export interface CurriculumLecture {
+  id: string
+  title: string
+  duration: number
+  order_no: number
+  is_preview: boolean
+}
+export interface CurriculumSection {
+  id: string
+  title: string
+  order_no: number
+  lectures: CurriculumLecture[]
+}
+export interface Curriculum {
+  course: { id: string; title: string; thumbnail_url: string | null }
+  sections: CurriculumSection[]
+}
+
+/** 코스 커리큘럼(GET /courses/:id/curriculum). 없거나 실패면 null(플레이어가 정적 데모로 폴백). */
+export async function fetchCourseCurriculum(
+  courseId: string,
+): Promise<Curriculum | null> {
+  try {
+    const r = await fetch(
+      `${API_BASE}/courses/${encodeURIComponent(courseId)}/curriculum`,
+    )
+    if (!r.ok) return null
+    const data = await r.json().catch(() => null)
+    if (!data || !data.course || !Array.isArray(data.sections)) return null
+    return data as Curriculum
+  } catch {
+    return null
+  }
+}
+
+export interface LectureProgress {
+  lecture_id: string
+  completed: boolean
+  last_position: number
+  watched_seconds: number
+}
+
+/** 코스 1개의 내 진도 맵(GET /me/progress?courseId=). 미로그인/실패면 빈 맵({}). */
+export async function fetchCourseProgress(
+  courseId: string,
+): Promise<Record<string, LectureProgress>> {
+  if (!getAccessToken()) return {}
+  try {
+    const r = await authedFetch(
+      `/me/progress?courseId=${encodeURIComponent(courseId)}`,
+    )
+    if (!r.ok) return {}
+    const rows = await r.json().catch(() => null)
+    if (!Array.isArray(rows)) return {}
+    const map: Record<string, LectureProgress> = {}
+    for (const row of rows) map[String(row.lecture_id)] = row as LectureProgress
+    return map
+  } catch {
+    return {}
+  }
+}
+
 /* ===== 관리자(admin) — 전역 JwtAuthGuard + RolesGuard('admin') (ADR 0011) =====
  * 401(미로그인)/403(권한없음)을 status로 구분해 호출부가 "관리자 권한 필요"를 표시한다. */
 export interface Cohort {

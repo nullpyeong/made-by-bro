@@ -77,6 +77,24 @@ export class ProgressService {
     return row;
   }
 
+  // 코스 1개의 내 진도 목록 — 재생목록 체크표시·이어보기 지점 계산용.
+  // 해당 코스 강의들에 대한 progress 행만 반환(없는 강의는 미수강으로 간주).
+  async listForCourse(userId: bigint, courseIdRaw: string) {
+    const courseId = this.toCourseId(courseIdRaw);
+    return this.prisma.progress.findMany({
+      where: {
+        user_id: userId,
+        lectures: { sections: { course_id: courseId } },
+      },
+      select: {
+        lecture_id: true,
+        completed: true,
+        last_position: true,
+        watched_seconds: true,
+      },
+    });
+  }
+
   // 이어보기 복원 — 해당 강의 진도(없으면 0 기본).
   async getOne(userId: bigint, lectureIdRaw: string) {
     const lectureId = this.toLectureId(lectureIdRaw);
@@ -108,6 +126,16 @@ export class ProgressService {
       return id;
     } catch {
       throw new BadRequestException('invalid lectureId');
+    }
+  }
+
+  private toCourseId(raw: string): bigint {
+    try {
+      const id = BigInt(raw);
+      if (id <= 0n) throw new Error('non-positive');
+      return id;
+    } catch {
+      throw new BadRequestException('invalid courseId');
     }
   }
 
