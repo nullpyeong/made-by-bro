@@ -1,0 +1,21 @@
+/* ============================================================
+   EPIC web · Tailwind entry (SETUP.md §2 원안)
+   import 순서(main.tsx): tokens.css → tailwind.css → app.css
+   - tokens.css : CSS 변수 SSOT (먼저 로드되어야 var() 해석 가능)
+   - tailwind.css : 유틸리티 레이어 (이 파일)
+   - app.css : 아직 전환 안 된 페이지의 시맨틱 컴포넌트 클래스 (점진 retire)
+   preflight는 tailwind.config.js에서 끔(app.css가 리셋 보유). app.css 제거 시 재활성.
+   ============================================================ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 마이그레이션 패턴:
+   - 레이아웃/간격/색은 유틸(flex, gap-3, bg-surface, text-muted, rounded-card …).
+   - sheen·리빌 등 효과가 박힌 리치 컴포넌트(.btn-grad 등)는 app.css 컴포넌트 클래스 유지.
+   - 공통 컴포넌트를 Tailwind-네이티브로 옮길 땐 아래처럼 @layer components + @apply 사용.
+   @layer components {
+     .btn-primary { @apply inline-flex items-center justify-center gap-1.5 rounded-pill
+       bg-primary text-on-primary font-semibold shadow-primary; }
+   }
+*/

@@ -48,19 +48,22 @@ pnpm start:dev                  # http://localhost:3000/api  (확인: GET /api/h
 > 인증/결제 등 추가 패키지(`@nestjs/jwt`, `passport`, `argon2`, `class-validator` 등)는
 > 해당 모듈 구현 시 `pnpm add` 로 붙인다.
 
-## 2. 프론트 — React + Vite (`apps/web`)
+## 2. 프론트 — React + Vite + Tailwind (`apps/web`)
+
+`apps/web`는 **이미 스캐폴딩 + Tailwind 구성**되어 있다(소스만 커밋, node_modules 제외). 설치만 하면 된다:
 
 ```bash
-cd apps
-pnpm create vite web --template react-ts
-cd web
-pnpm add -D tailwindcss postcss autoprefixer
-pnpm dlx tailwindcss init -p
-pnpm add axios react-router-dom @tanstack/react-query
+cd apps/web
+pnpm install
+pnpm dev                         # http://localhost:5173
 ```
 
-> Tailwind 설정에는 `design-docs`/`docs/design/tokens.css`의 토큰을 매핑해 쓰세요.
-> (디자인 토큰 매핑 예시는 기존 `DESIGN.md` 6절 참고)
+> **Tailwind는 토큰 브리지 방식**(ADR 0014): `tailwind.config.js`가 색/라운드/그림자/타이포를
+> `tokens.css`의 CSS 변수에 매핑한다 → 유틸(`bg-primary`, `text-muted`, `rounded-card`)이
+> `var(--…)`로 해석되어 다크모드·디자인이 그대로 보존된다.
+> 진입: `src/styles/tailwind.css`(`@tailwind` 디렉티브). import 순서는 `main.tsx` 참고
+> (tokens → tailwind → app.css). 효과가 박힌 리치 컴포넌트(`.btn-grad` 등)는 app.css 클래스를
+> 유지하고, 레이아웃/색/간격은 유틸로 — 페이지 단위로 점진 전환 중(app.css는 전환 완료 시 retire).
 
 ## 3. 디자인 토큰 재사용
 

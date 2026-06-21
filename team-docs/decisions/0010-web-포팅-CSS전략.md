@@ -2,10 +2,12 @@
 
 | | |
 |---|---|
-| 상태 | 🟡 검토중 |
+| 상태 | 🔁 대체됨 → [0014](0014-web-tailwind-도입.md) |
 | 날짜 | 2026-06-21 |
 | 파트 | Engineering / Design |
-| 결정자 | (사람 확정 대기) |
+| 결정자 | (미채택 — 0014로 대체) |
+
+> **대체 안내**: 이 ADR은 "app.css 재사용 / Tailwind 안 함"을 제안(🟡)했으나 채택되지 않았다. 김지평이 SETUP.md §2 원안(Tailwind)으로 확정 → [ADR 0014](0014-web-tailwind-도입.md)가 대체한다. 아래 본문은 당시 제안 기록으로 보존.
 
 ## 맥락
 ADR 0001로 `apps/web` = React+Vite+TS가 확정됐고, 이제 `docs/`의 정적 시안(10개 HTML + `app.css` 1514줄 + `tokens.css` + `app.js` 1646줄)을 실제 React 앱으로 옮긴다.
