@@ -1015,37 +1015,15 @@ td .minibar .bar{flex:1;max-width:90px}
 .tasklist .tk{display:flex;align-items:center;gap:10px;padding:9px 0;font-size:12.5px;border-top:1px solid var(--color-border)}
 .tasklist .tk:first-child{border-top:none}
 
-/* ===== 구매 카드: 마감 카운트다운 ===== */
-.deadline{display:flex;align-items:center;justify-content:space-between;gap:10px;
-  background:linear-gradient(100deg,var(--color-primary-soft),var(--color-accent-soft));
-  border:1px solid var(--color-border);border-radius:var(--radius-md);padding:9px 12px}
-.deadline .lbl{font-size:11.5px;font-weight:var(--w-bold);color:var(--color-primary);display:flex;align-items:center;gap:5px}
-.deadline .lbl::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--color-danger);box-shadow:0 0 0 0 var(--color-danger);animation:cdpulse 1.6s infinite}
-@keyframes cdpulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--color-danger) 55%,transparent)}70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
-.deadline .clock{display:flex;align-items:center;gap:2px;font-weight:900;font-size:14px;color:var(--color-text);font-variant-numeric:tabular-nums}
-.deadline .clock b{background:var(--color-text);color:var(--color-text-on,#fff);border-radius:6px;padding:3px 5px;min-width:24px;text-align:center;line-height:1;font-size:13px}
-[data-theme="dark"] .deadline .clock b{background:var(--color-surface-alt);color:var(--color-text)}
-.deadline .clock i{font-style:normal;opacity:.5;font-size:12px}
-
-/* ===== 구매 카드: 쿠폰 토글 ===== */
-.coupon{margin:0 0 12px}
-.coupon-apply{width:100%;display:flex;align-items:center;gap:9px;cursor:pointer;
-  background:var(--color-surface);border:1.5px dashed var(--color-primary);border-radius:var(--radius-md);
-  padding:11px 13px;font-size:13px;font-weight:var(--w-semibold);color:var(--color-text);
-  transition:background .15s,border-color .15s}
-.coupon-apply:hover{background:var(--color-primary-soft)}
-.coupon-apply .tag{font-size:10.5px;font-weight:900;color:#fff;background:var(--color-primary);border-radius:var(--radius-pill);padding:3px 8px;white-space:nowrap}
-.coupon-apply .txt{flex:1;text-align:left}
-.coupon-apply .arr{font-size:17px;color:var(--color-primary);line-height:1}
-.coupon-on{display:flex;align-items:center;gap:8px;
-  background:var(--color-success-soft);border:1px solid color-mix(in srgb,var(--color-success) 35%,transparent);
-  border-radius:var(--radius-md);padding:11px 13px;font-size:12.5px}
-.coupon-on .ok{flex:1;font-weight:var(--w-bold);color:var(--color-success);display:flex;align-items:center;gap:6px}
-.coupon-on .ok em{font-style:normal;font-weight:900}
-.coupon-on .undo{background:transparent;border:none;cursor:pointer;font-size:11.5px;font-weight:var(--w-semibold);color:var(--color-text-muted);text-decoration:underline;padding:2px 4px}
-.coupon-on .undo:hover{color:var(--color-text)}
+/* ===== 구매 카드: 얼리버드 잔여석(진짜 한정) ===== */
+.seats{margin-bottom:14px}
+.seats-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:7px}
+.seats-top .lbl{font-size:11.5px;font-weight:var(--w-bold);color:var(--color-primary)}
+.seats-top .left{font-size:11.5px;font-weight:var(--w-semibold);color:var(--color-text-muted)}
+.seats-top .left b{color:var(--color-text);font-weight:900}
+.seats-bar{height:6px;border-radius:var(--radius-pill);background:var(--color-surface-alt);overflow:hidden}
+.seats-bar i{display:block;height:100%;border-radius:var(--radius-pill);background:linear-gradient(90deg,var(--color-primary),var(--color-accent))}
 .price-row{display:flex;align-items:baseline;gap:8px;margin:14px 0 2px}
-.price-row .save{font-size:11px;font-weight:900;color:var(--color-success);background:var(--color-success-soft);border-radius:var(--radius-pill);padding:2px 8px;align-self:center}
 .tasklist .tk .qn{margin-left:auto;font-size:11px;font-weight:var(--w-bold);background:var(--color-danger-soft);color:var(--color-danger);padding:2px 8px;border-radius:var(--radius-pill)}
 
 /* ===== Course 상세: 맑은 SaaS 디테일 ===== */

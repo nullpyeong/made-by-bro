@@ -212,7 +212,6 @@ document.addEventListener('DOMContentLoaded',()=>{
       accs.forEach(a=>a.classList.toggle('open',open));
       const tx=el.querySelector('.tx'); if(tx) tx.textContent=open?'모두 접기':'모두 펼치기';
     }
-    else if(act==='coupon-toggle'){ toggleCoupon(el); }
     else if(act==='theme'){ toggleTheme(); }
     else if(act==='menu'){ const d=document.getElementById('drawer'); if(d) d.classList.add('open'); }
     else if(act==='menu-close'){ const d=el.closest('.drawer'); if(d) d.classList.remove('open'); }
@@ -236,7 +235,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(d&&d.classList.contains('open')&&e.target===d) d.classList.remove('open');
   });
 
-  initSpotlight(); initNavShadow(); initCountdown(); initCart(); initCheckout(); initComplete(); initLesson(); initDashboard(); initCourseCurriculum(); initLiveSync();
+  initSpotlight(); initNavShadow(); initCart(); initCheckout(); initComplete(); initLesson(); initDashboard(); initCourseCurriculum(); initLiveSync();
   updateCartBadges(false); // 내비 장바구니 카운트 복원
 });
 
@@ -767,48 +766,6 @@ function initComplete(){
   // 멤버십이면 "바로 수강 시작"은 전체 강의로
   const start=q('start'); if(start&&plan==='membership') start.setAttribute('href','home.html#courses');
   clearCart(); // 결제 완료 → 장바구니 비움(내비 배지 리셋)
-}
-
-/* ----- 구매 카드: 쿠폰 토글(적용/해제) ----- */
-function toggleCoupon(el){
-  const card=el.closest('[data-coupon]'); if(!card) return;
-  const applied=card.classList.toggle('applied');
-  const apply=card.querySelector('.coupon-apply');
-  const on=card.querySelector('.coupon-on');
-  if(apply) apply.hidden=applied;
-  if(on) on.hidden=!applied;
-  // 가격 갱신
-  const scope=card.closest('[data-buybox]')||document;
-  const now=scope.querySelector('[data-price-now]');
-  const was=scope.querySelector('[data-price-was]');
-  const save=scope.querySelector('[data-price-save]');
-  const base=now&&now.dataset.base, disc=now&&now.dataset.disc;
-  if(now&&base&&disc){ now.textContent=applied?disc:base; }
-  if(was){ was.hidden=!applied; }
-  if(save){ save.hidden=!applied; }
-  // 모바일 고정 CTA 동기화(카드 밖에 있으므로 document 범위)
-  document.querySelectorAll('[data-mprice]').forEach(m=>{ if(base&&disc) m.textContent=applied?disc:base; });
-  document.querySelectorAll('[data-mwas]').forEach(m=>{ m.hidden=!applied; });
-  toast(applied?'쿠폰 WELCOME15 적용 — 9,900원 할인':'쿠폰을 해제했습니다');
-}
-
-/* ----- 마감 카운트다운(오늘 자정까지) ----- */
-function initCountdown(){
-  const els=document.querySelectorAll('[data-countdown]');
-  if(!els.length) return;
-  const pad=n=>String(n).padStart(2,'0');
-  const tick=()=>{
-    const now=new Date();
-    const end=new Date(now); end.setHours(23,59,59,999);
-    let s=Math.max(0,Math.floor((end-now)/1000));
-    const h=Math.floor(s/3600); s-=h*3600;
-    const m=Math.floor(s/60); s-=m*60;
-    els.forEach(box=>{
-      const H=box.querySelector('[data-cd="h"]'), M=box.querySelector('[data-cd="m"]'), S=box.querySelector('[data-cd="s"]');
-      if(H)H.textContent=pad(h); if(M)M.textContent=pad(m); if(S)S.textContent=pad(s);
-    });
-  };
-  tick(); setInterval(tick,1000);
 }
 
 /* ----- 내비 스크롤 섀도(스크롤 시 떠보이게) ----- */
