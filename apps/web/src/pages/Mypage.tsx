@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { initDashboard, initLiveSync } from '../lib/engine'
+import { getStoredUser } from '../lib/api'
 
 /* 마이페이지 — 학습 허브(resume-first 대시보드).
    정적 셸은 docs/pages/mypage.html 과 동일하게 주입하고, initDashboard()가
@@ -12,13 +13,13 @@ const BODY = `
   <a class="logo" href="/"><span class="ico mark"><svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M9 7.3v9.4l7.2-4.7z"/></svg></span><span class="wm"><b>EPIC<em>.</em></b><i>에픽영어교습소</i></span></a>
   <nav><a href="/">전체강의</a><a href="/qna">Q&A</a></nav>
   <input class="search" placeholder="강의 검색">
-  <div class="right"><button class="theme-toggle" data-act="theme" aria-label="다크모드 전환"><span class="moon"><i class="icn icn-moon"></i></span><span class="sun"><i class="icn icn-sun"></i></span></button><a class="cartnav" href="/cart" data-cartnav aria-label="장바구니"><i class="icn icn-cart"></i><span class="cc" data-cartcount-badge hidden>0</span></a><a class="bell" href="/mypage"><i class="icn icn-bell"></i><span class="dot"></span></a><span style="font-weight:600;color:var(--color-text)">홍길동 님</span></div>
+  <div class="right"><button class="theme-toggle" data-act="theme" aria-label="다크모드 전환"><span class="moon"><i class="icn icn-moon"></i></span><span class="sun"><i class="icn icn-sun"></i></span></button><a class="cartnav" href="/cart" data-cartnav aria-label="장바구니"><i class="icn icn-cart"></i><span class="cc" data-cartcount-badge hidden>0</span></a><a class="bell" href="/mypage"><i class="icn icn-bell"></i><span class="dot"></span></a><span style="font-weight:600;color:var(--color-text)"><span data-username>홍길동</span> 님</span></div>
 </div></div>
 
 <div class="container" style="padding-top:30px">
   <!-- 인사 -->
   <div style="margin-bottom:14px">
-    <div style="font-size:20px;font-weight:800;letter-spacing:var(--tracking-tight);display:flex;align-items:center;gap:10px;flex-wrap:wrap">안녕하세요, 홍길동 님 <span class="streakchip"><i class="icn icn-flame"></i> 7일 연속 학습 중</span></div>
+    <div style="font-size:20px;font-weight:800;letter-spacing:var(--tracking-tight);display:flex;align-items:center;gap:10px;flex-wrap:wrap">안녕하세요, <span data-username>홍길동</span> 님 <span class="streakchip"><i class="icn icn-flame"></i> 7일 연속 학습 중</span></div>
     <div class="muted" style="font-size:13px;margin-top:3px">오늘도 <b style="color:var(--color-text)">초·중등 데일리 영어회화 30일</b> 이어서 완주해볼까요?</div>
   </div>
 
@@ -156,7 +157,7 @@ const BODY = `
   <!-- 프로필 -->
   <div data-panel="prof" style="display:none">
     <div class="card flat" style="padding:20px;max-width:420px">
-      <div class="field"><label>이름</label><input class="input" value="홍길동"></div>
+      <div class="field"><label>이름</label><input class="input" data-username-input value="홍길동"></div>
       <div class="field"><label>이메일</label><input class="input" value="user@epic.com" disabled></div>
       <button class="btn btn-primary" data-act="toast" data-msg="프로필을 저장했습니다">저장</button>
     </div>
@@ -173,7 +174,7 @@ const BODY = `
     </div>
     <div style="padding:24px;text-align:center">
       <p class="muted" style="font-size:13px">아래 학습자는 과정을 성실히 수료하였음을 증명합니다.</p>
-      <div style="font-size:18px;font-weight:800;margin:10px 0">홍길동</div>
+      <div style="font-size:18px;font-weight:800;margin:10px 0" data-username>홍길동</div>
       <div style="font-size:13px">중등 내신 영어 완성 · 평균 88점</div>
       <div class="muted" style="font-size:11.5px;margin-top:6px">수료번호 EPIC-2026-0512 · 2026-05-30</div>
       <div style="display:flex;gap:8px;justify-content:center;margin-top:18px">
@@ -193,7 +194,7 @@ const BODY = `
     </div>
     <div style="padding:24px;text-align:center">
       <p class="muted" style="font-size:13px">아래 학습자는 모든 단원평가를 통과하여 전 과정을 마스터하였음을 증명합니다.</p>
-      <div style="font-size:18px;font-weight:800;margin:10px 0">홍길동</div>
+      <div style="font-size:18px;font-weight:800;margin:10px 0" data-username>홍길동</div>
       <div style="font-size:13px">초·중등 데일리 영어회화 30일</div>
       <div style="font-size:13px;margin-top:4px">단원평가 평균 <b data-master-avg>—</b></div>
       <div class="muted" style="font-size:11.5px;margin-top:6px">EPIC 전 과정 마스터 인증 · 4개 단원평가 전부 통과</div>
@@ -235,6 +236,16 @@ export default function Mypage() {
   useEffect(() => {
     initDashboard()
     initLiveSync()
+    // 로그인 유저가 있으면 인사·프로필 이름을 실제 이름으로(미로그인/데모면 기본값 유지)
+    const name = getStoredUser()?.name?.trim()
+    if (name && name !== '홍길동') {
+      const root = document.querySelector('[data-dashboard]')
+      root?.querySelectorAll('[data-username]').forEach((el) => {
+        el.textContent = name
+      })
+      const input = root?.querySelector('[data-username-input]')
+      if (input instanceof HTMLInputElement) input.value = name
+    }
   }, [])
   return <div data-dashboard dangerouslySetInnerHTML={{ __html: BODY }} />
 }

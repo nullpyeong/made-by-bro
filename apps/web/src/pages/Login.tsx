@@ -1,9 +1,47 @@
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { LogoMark } from '../components/Nav'
+import { login, fetchMe } from '../lib/api'
+import { toast } from '../lib/interactions'
 
 /** 로그인 — SaaS 스플릿 레이아웃(좌 브랜드 패널 / 우 폼).
- * 프로토타입이라 실제 인증은 없고, 로그인 시 학습 허브(마이페이지)로 이동한다. */
+ * POST /auth/login → access/refresh JWT를 localStorage(epic-access-token)에 저장하고
+ * GET /auth/me로 토큰을 검증한 뒤 학습 허브(마이페이지)로 이동한다.
+ * 백엔드 미연결(네트워크 실패) 시엔 프로토타입 데모 입장으로 폴백한다(토큰 없이 진입). */
 export default function Login() {
+  const navigate = useNavigate()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [err, setErr] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (loading) return
+    setErr('')
+    if (!email.trim() || !password) {
+      setErr('이메일과 비밀번호를 입력해 주세요')
+      return
+    }
+    setLoading(true)
+    const res = await login(email.trim(), password)
+    if (res.ok) {
+      // 발급된 access 토큰을 /auth/me로 검증(실패해도 로그인은 성공이므로 진입은 진행)
+      await fetchMe()
+      toast(`${res.user.name}님, 환영해요`)
+      navigate('/mypage')
+      return
+    }
+    if (res.reason === 'network') {
+      // 백엔드 미연결 — 프로토타입 데모 입장(토큰 없음 → activation은 no-auth로 건너뜀)
+      toast('데모 모드로 입장합니다 (백엔드 미연결)')
+      navigate('/mypage')
+      return
+    }
+    setErr(res.message)
+    setLoading(false)
+  }
+
   return (
     <>
       <div className="gnb">
@@ -71,7 +109,7 @@ export default function Login() {
 
         {/* 우: 폼 */}
         <div className="formside">
-          <div className="formbox">
+          <form className="formbox" onSubmit={handleSubmit}>
             <div style={{ marginBottom: 22 }}>
               <h2 style={{ fontSize: 22, fontWeight: 800 }}>다시 오셨네요</h2>
               <p className="muted" style={{ fontSize: 13.5, marginTop: 5 }}>
@@ -80,11 +118,25 @@ export default function Login() {
             </div>
             <div className="field">
               <label>이메일</label>
-              <input className="input" placeholder="you@email.com" />
+              <input
+                className="input"
+                type="email"
+                autoComplete="email"
+                placeholder="you@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
             </div>
             <div className="field">
               <label>비밀번호</label>
-              <input className="input" type="password" placeholder="••••••••" />
+              <input
+                className="input"
+                type="password"
+                autoComplete="current-password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </div>
             <div
               style={{
@@ -112,11 +164,33 @@ export default function Login() {
                 비밀번호 찾기
               </a>
             </div>
-            <Link className="btn btn-grad btn-block" to="/mypage" style={{ marginBottom: 10 }}>
-              로그인 <span className="arr">→</span>
-            </Link>
+            {err && (
+              <div
+                role="alert"
+                style={{
+                  fontSize: 12.5,
+                  color: 'var(--color-danger, #d92d20)',
+                  background: 'var(--color-danger-soft, #fef3f2)',
+                  border: '1px solid var(--color-danger, #d92d20)',
+                  borderRadius: 10,
+                  padding: '9px 12px',
+                  marginBottom: 12,
+                }}
+              >
+                {err}
+              </div>
+            )}
+            <button
+              type="submit"
+              className="btn btn-grad btn-block"
+              style={{ marginBottom: 10, opacity: loading ? 0.7 : 1 }}
+              disabled={loading}
+            >
+              {loading ? '로그인 중…' : <>로그인 <span className="arr">→</span></>}
+            </button>
             <div className="divider-or">또는</div>
             <button
+              type="button"
               style={{
                 width: '100%',
                 background: '#fee500',
@@ -148,7 +222,7 @@ export default function Login() {
                 이메일로 회원가입
               </a>
             </div>
-          </div>
+          </form>
         </div>
       </div>
     </>
