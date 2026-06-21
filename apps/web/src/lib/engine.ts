@@ -501,6 +501,7 @@ const LESSON_LIST=[
 const LESSONS={}; LESSON_LIST.forEach(l=>{ LESSONS[l.id]=l; });
 
 /* ----- 진도 모델 + 파생 지표 ----- */
+const PROGRESS_KEY='epic-progress-v2';
 function _dStr(d){ return d.toISOString().slice(0,10); }
 function todayStr(){ return _dStr(new Date()); }
 function daysAgo(n){ const x=new Date(); x.setDate(x.getDate()-n); return _dStr(x); }
@@ -906,5 +907,216 @@ function initCourseCurriculum(){
   }
 }
 
+/* ===== 마이페이지 대시보드 — app.js verbatim 포팅 (initDashboard/단원평가/리포트) ===== */
+function initLiveSync(){
+  window.addEventListener('storage',e=>{
+    if(e.key!==PROGRESS_KEY) return; // 진도 키만
+    let changed=false;
+    if(document.querySelector('[data-curriculum]')){ initCourseCurriculum(); changed=true; }
+    if(document.querySelector('[data-dashboard]')){ initDashboard(); changed=true; }
+    if(changed) toast('학습 진도가 업데이트됐어요');
+  });
+}
+
+/* ----- 마이페이지 대시보드: 진도/연속학습/수료 실제 반영 ----- */
+function initDashboard(){
+  const root=document.querySelector('[data-dashboard]'); if(!root) return;
+  const pct=courseProgressPct(), doneN=lessonsDone().length, totN=ALL_LESSONS.length;
+  const streak=studyStreak(), hours=totalStudyHours();
+
+  // 이어보기 배너 + 회화 강의 카드
+  const set=(sel,fn)=>root.querySelectorAll(sel).forEach(fn);
+  set('[data-resume-bar]',e=>e.style.width=pct+'%');
+  set('[data-resume-meta]',e=>e.innerHTML='강의 진도 <b>'+pct+'%</b> · '+doneN+'/'+totN+'강 완료 · 다음 강: 2-1. 교실에서 선생님께 질문하기');
+  set('[data-course-bar]',e=>{ e.style.width=pct+'%'; e.classList.toggle('done',pct>=100); });
+  set('[data-course-pct]',e=>e.textContent='진도 '+pct+'%');
+
+  // KPI
+  set('[data-kpi="hours"]',e=>e.innerHTML=hours.toFixed(1)+'<small>h</small>');
+  set('[data-kpi="streak"]',e=>e.innerHTML=streak+'<small>일</small>');
+  set('[data-kpi="next-cert"]',e=>e.innerHTML='다음 수료까지 <b style="color:var(--color-text)">'+pct+'%</b>');
+  const bars=root.querySelector('[data-streakbars]');
+  if(bars){ bars.innerHTML=''; for(let i=0;i<7;i++){ const b=document.createElement('i'); if(i<Math.min(streak,7)) b.className='on'; bars.appendChild(b); } }
+
+  // 이번 주 학습 — 일별 학습량 막대 차트
+  const wg=root.querySelector('[data-weekgrid]'); const wk=weekDays();
+  const wkMax=Math.max(40,...wk.map(d=>d.min)); let wkTotal=0;
+  if(wg){ wg.innerHTML=wk.map(d=>{
+      wkTotal+=d.min;
+      const lv=heatLevel(d.min);
+      const h=d.min>0?Math.max(14,Math.round(d.min/wkMax*100)):0;
+      const cls=['wcol',d.today?'today':'',d.future?'future':''].filter(Boolean).join(' ');
+      const val=d.future?'':(d.min>0?d.min:'0');
+      return '<div class="'+cls+'"><div class="wval">'+val+'</div><div class="wtrack"><i class="wbar '+lv+'" style="height:'+h+'%"></i></div><div class="dl">'+d.label+'</div></div>';
+    }).join(''); } else { wk.forEach(d=>wkTotal+=d.min); }
+  const studiedDays=wk.filter(d=>d.min>0).length;
+  set('[data-week-done]',e=>e.textContent=studiedDays);
+  set('[data-week-total]',e=>e.textContent=wkTotal);
+
+  // 전 과정 마스터 배지/배너
+  const mc=root.querySelector('[data-master]');
+  if(mc) renderMasterCard(mc);
+
+  // 단원평가 카드
+  const ut=root.querySelector('[data-unittests]');
+  if(ut) renderUnitTests(ut);
+
+  // 대시보드 내 클릭(단원평가 응시 / 학부모 리포트) — 큰 스위치 안 건드리도록 별도 위임
+  // 가드: storage 이벤트로 재렌더돼도 클릭 핸들러는 1회만 바인딩
+  if(!root.dataset.guard){ root.dataset.guard='1';
+    root.addEventListener('click',e=>{
+      const mb=e.target.closest('[data-master-open]');
+      if(mb){ const m=document.getElementById('masterCertModal'); if(m){ const a=m.querySelector('[data-master-avg]'); if(a) a.textContent=unitAvgPct()+'점'; m.style.display='flex'; } return; }
+      const ub=e.target.closest('[data-unit-open]');
+      if(ub){ openUnitTest(ub.getAttribute('data-unit-open')); return; }
+      const rb=e.target.closest('[data-report-open]');
+      if(rb){ buildReport(); const m=document.getElementById('reportModal'); if(m) m.style.display='flex'; return; }
+    });
+  }
+}
+
+/* 전 과정 마스터 카드: 단원평가 전부 통과 전엔 잠금(진행바), 통과 시 골드 축하 배너 */
+function renderMasterCard(box){
+  const passed=unitsPassedCount(), total=UNITS.length, done=allUnitsPassed();
+  if(done){
+    box.className='mastercard done';
+    box.innerHTML='<div class="mc-ico"><i class="icn icn-trophy"></i></div>'
+      +'<div class="mc-body"><b class="mc-title">전 과정 마스터 달성!</b>'
+      +'<div class="mc-sub">'+total+'개 단원평가를 모두 통과했어요 · 평균 '+unitAvgPct()+'점</div></div>'
+      +'<button class="btn btn-sm mc-btn" data-master-open><i class="icn icn-trophy"></i> 마스터 수료증 보기</button>';
+  } else {
+    box.className='mastercard locked';
+    box.innerHTML='<div class="mc-ico"><i class="icn icn-trophy"></i></div>'
+      +'<div class="mc-body"><b class="mc-title">전 과정 마스터까지 '+passed+'/'+total+' 단원평가 통과</b>'
+      +'<div class="mc-track"><i style="width:'+Math.round(passed/total*100)+'%"></i></div></div>';
+  }
+}
+
+function renderUnitTests(box){
+  const p=getProgress();
+  // 다음 응시 가능한 단원 = 잠금 해제됐고 아직 미응시인 첫 단원(course의 ▶ 현재 강과 동일 개념)
+  const nextU=UNITS.find(u=>unitUnlocked(u)&&!p.units[u.key]);
+  const nextKey=nextU?nextU.key:null;
+  box.innerHTML=UNITS.map(u=>{
+    const rec=p.units[u.key], open=unitUnlocked(u), isNext=u.key===nextKey;
+    let right;
+    if(rec) right='<span class="badge green">'+rec.score+'/'+rec.total+'점</span><button class="btn btn-ghost btn-sm" data-unit-open="'+u.key+'">다시 응시</button>';
+    else if(isNext) right='<button class="btn btn-primary btn-sm pulse" data-unit-open="'+u.key+'">지금 응시하기 →</button>';
+    else if(open) right='<button class="btn btn-primary btn-sm" data-unit-open="'+u.key+'">응시하기</button>';
+    else right='<span class="badge gray"><i class="icn icn-lock"></i> 섹션 완료 시 열림</span>';
+    const cls='unitrow'+(isNext?' cur':'')+(rec?' done':'');
+    const icon=rec?'<i class="icn icn-check"></i>':(isNext?'<i class="icn icn-play"></i>':(open?'<i class="icn icn-pencil"></i>':'<i class="icn icn-lock"></i>'));
+    return '<div class="'+cls+'"><div class="ui"><span class="ux">'+icon+'</span><div><b>'+u.title+'</b>'
+      +(isNext?' <span class="nexttag">다음 평가</span>':'')
+      +'<div class="muted" style="font-size:11.5px">'+u.q.length+'문항 · 단원 마무리 평가</div></div></div>'
+      +'<div class="ur">'+right+'</div></div>';
+  }).join('');
+}
+
+function openUnitTest(key){
+  const u=UNITS.find(x=>x.key===key); if(!u) return;
+  const modal=document.getElementById('unitModal'); if(!modal) return;
+  const body=modal.querySelector('[data-unit-body]');
+  body.innerHTML='<div class="utq-wrap">'+u.q.map((item,i)=>
+      '<div class="rq" data-uq><div class="qq"><span class="n">Q'+(i+1)+'.</span> '+item.q+'</div>'
+      +item.opts.map((o,j)=>'<button class="rq-opt" data-opt="'+j+'" data-ans="'+item.a+'">'+o+'</button>').join('')
+      +'</div>').join('')
+    +'</div><div class="utbar"><span class="muted" data-utprog>0 / '+u.q.length+' 응답</span>'
+    +'<button class="btn btn-primary btn-sm" data-utsubmit disabled>채점하기</button></div>'
+    +'<div class="quizresult" data-utresult></div>';
+  modal.querySelector('[data-unit-title]').textContent=u.title;
+  modal.dataset.unitKey=key;
+  modal.style.display='flex';
+  bindUnitTest(modal,u);
+}
+
+function bindUnitTest(modal,u){
+  const body=modal.querySelector('[data-unit-body]');
+  const submit=modal.querySelector('[data-utsubmit]');
+  const prog=modal.querySelector('[data-utprog]');
+  const answered={};
+  body.onclick=ev=>{
+    const opt=ev.target.closest('.rq-opt'); if(!opt) return;
+    const q=opt.closest('[data-uq]'); if(q.dataset.graded) return;
+    q.querySelectorAll('.rq-opt').forEach(o=>o.classList.remove('sel'));
+    opt.classList.add('sel'); q.dataset.pick=opt.dataset.opt;
+    answered[[...body.querySelectorAll('[data-uq]')].indexOf(q)]=1;
+    const n=Object.keys(answered).length; prog.textContent=n+' / '+u.q.length+' 응답';
+    if(submit) submit.disabled=n<u.q.length;
+  };
+  submit.onclick=()=>{
+    let correct=0;
+    body.querySelectorAll('[data-uq]').forEach((q,i)=>{
+      q.dataset.graded='1';
+      const pick=q.dataset.pick;
+      q.querySelectorAll('.rq-opt').forEach(o=>{
+        o.classList.remove('sel'); // 정답/오답 색이 선택색(.sel)에 가려지지 않게
+        if(o.dataset.opt===o.dataset.ans){ o.classList.add('correct'); }
+        if(o.dataset.opt===pick && pick!==o.dataset.ans){ o.classList.add('wrong'); }
+      });
+      const right=pick===q.querySelector('.rq-opt').dataset.ans;
+      if(right) correct++;
+      // 오답 해설 한 줄 (정답엔 ✓, 오답엔 💡)
+      const exp=u.q[i] && u.q[i].e;
+      if(exp && !q.querySelector('.rq-exp')){
+        const ans=u.q[i].opts[u.q[i].a];
+        q.insertAdjacentHTML('beforeend','<div class="rq-exp'+(right?' ok':'')+'">'
+          +(right?'<i class="icn icn-check"></i> ':'<i class="icn icn-bulb"></i> 정답: <b>'+ans+'</b> — ')+exp+'</div>');
+      }
+    });
+    const res=modal.querySelector('[data-utresult]'); const pass=correct>=Math.ceil(u.q.length*0.6);
+    res.className='quizresult show '+(pass?'pass':'fail');
+    res.innerHTML=(pass?'통과! ':'조금 더! ')+correct+' / '+u.q.length+' 정답'
+      +'<div class="rst">단원평가 결과가 학부모 리포트에 기록됐어요.</div>';
+    submit.disabled=true; submit.innerHTML='채점 완료 <i class="icn icn-check"></i>';
+    const p=getProgress(); p.units[u.key]={score:correct,total:u.q.length,date:todayStr()}; saveProgress(p);
+    const box=document.querySelector('[data-unittests]'); if(box) renderUnitTests(box);
+    toast('단원평가 '+correct+'/'+u.q.length+'점 — 리포트에 반영됐어요');
+  };
+}
+
+/* ----- 학부모 리포트(주간 요약) ----- */
+function buildReport(){
+  const body=document.querySelector('[data-report-body]'); if(!body) return;
+  const p=getProgress(), wk=weekDays(), wkMin=wk.reduce((a,d)=>a+d.min,0);
+  const studied=wk.filter(d=>d.min>0).length, pct=courseProgressPct();
+  const qa=quizAvg();
+  // 섹션별 단원평가 점수 막대 그래프
+  const unitBars=UNITS.map((u,i)=>{
+    const r=p.units[u.key], taken=!!r;
+    const pv=taken?Math.round(r.score/r.total*100):0;
+    const passed=taken&&r.score>=Math.ceil(r.total*0.6);
+    const fill=passed?'pass':(taken?'retry':'');
+    const val=taken?(r.score+'/'+r.total):'미응시';
+    return '<div class="ubar-row"><span class="ubar-lab">섹션'+(i+1)+'</span>'
+      +'<div class="ubar-track"><i class="'+fill+'" style="width:'+pv+'%"></i></div>'
+      +'<span class="ubar-val'+(taken?'':' na')+'">'+val+'</span></div>';
+  }).join('');
+  // 주간 학습시간 미니 컬럼 차트 (최댓값 기준 정규화)
+  const wkMax=wk.reduce((a,d)=>Math.max(a,d.min),0);
+  const weekChart='<div class="rpweek"><div class="rpchart-h"><i class="icn icn-chart"></i> 이번 주 학습시간(분)</div><div class="rpweek-bars">'
+    +wk.map(d=>{
+      const h=wkMax?Math.round(d.min/wkMax*100):0;
+      return '<div class="rpw-col"><div class="rpw-bar-wrap"><i class="rpw-bar'+(d.today?' today':'')+'" style="height:'+(d.future?0:h)+'%"></i></div>'
+        +'<span class="rpw-min">'+(d.future?'·':(d.min||0))+'</span><span class="rpw-lab">'+d.label+'</span></div>';
+    }).join('')
+    +'</div></div>';
+  const recent=lessonsDone().slice(-4);
+  const stat=(v,l)=>'<div class="rpstat"><b>'+v+'</b><span>'+l+'</span></div>';
+  const cmt = pct>=100 ? '과정을 끝까지 완주했어요. 정말 성실하게 학습했습니다.'
+            : (studied>=4 ? '이번 주 꾸준히 학습했어요. 이 속도면 이번 달 안에 완주할 수 있어요!'
+                          : '한 주 동안 학습을 시작했어요. 매일 10분씩 함께 이어가면 금방 익숙해질 거예요.');
+  body.innerHTML=
+    '<div class="rphead"><div><b>홍길동</b> 학습자 · 초·중등 데일리 영어회화 30일</div>'
+    +'<div class="muted" style="font-size:11.5px">기간: 이번 주 ('+wk[0].date+' ~ '+wk[6].date+')</div></div>'
+    +'<div class="rpstats">'+stat(Math.round(wkMin/60*10)/10+'h',' 이번 주 학습')+stat(studied+'일',' 학습한 날')
+      +stat(pct+'%',' 강의 진도')+stat(studyStreak()+'일',' 연속 학습')+'</div>'
+    +weekChart
+    +'<div class="rpline"><span>복습 퀴즈 평균</span><b>'+(qa?qa.pct+'% ('+qa.score+'/'+qa.total+')':'기록 없음')+'</b></div>'
+    +'<div class="rpchart"><div class="rpchart-h"><i class="icn icn-chart"></i> 단원평가 섹션별 점수</div>'+unitBars+'</div>'
+    +'<div class="rpline"><span>이번 주 완료한 강의</span><b>'+(recent.length?recent.join(', '):'-')+'</b></div>'
+    +'<div class="rpcmt"><b><i class="icn icn-teacher"></i> 선생님 한마디</b><p>'+cmt+'</p></div>';
+}
+
 /* ----- exports ----- */
-export { initLesson, initCourseCurriculum, getProgress, saveProgress, recordLessonDone, nextLesson, courseProgressPct, lessonsDone, totalStudyHours, studyStreak, weekDays, heatLevel, quizAvg, unitAvgPct, unitsPassedCount, allUnitsPassed, unitUnlocked, todayStr, ALL_LESSONS, CURRICULUM, LESSONS, LESSON_LIST, UNITS, UNIT_BANK }
+export { initLesson, initCourseCurriculum, getProgress, saveProgress, recordLessonDone, nextLesson, courseProgressPct, lessonsDone, totalStudyHours, studyStreak, weekDays, heatLevel, quizAvg, unitAvgPct, unitsPassedCount, allUnitsPassed, unitUnlocked, todayStr, ALL_LESSONS, CURRICULUM, LESSONS, LESSON_LIST, UNITS, UNIT_BANK, initDashboard, initLiveSync }
