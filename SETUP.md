@@ -7,7 +7,28 @@
 ## 0. 사전 준비
 
 - Node.js 20+ / pnpm (`npm i -g pnpm`)
-- PostgreSQL (로컬 또는 Supabase/Neon 무료 인스턴스)
+- PostgreSQL — 로컬 Docker(아래 권장) 또는 Supabase/Neon 무료 인스턴스
+- Docker Desktop (로컬 DB용)
+
+### 로컬 DB (Docker Compose) — 권장
+
+레포 루트에 `docker-compose.yml`이 있다. PostgreSQL 16 + 영구 볼륨.
+
+```bash
+# 레포 루트에서
+docker compose up -d                  # DB 기동
+# 스키마 적용 (최초 1회 — design-docs/schema.sql = 현재 SSOT)
+docker exec -i made-by-bro-db psql -U madebybro -d madebybro < design-docs/schema.sql
+docker compose down                   # 정지(데이터 유지) /  down -v 는 초기화
+```
+
+접속 문자열(`apps/api/.env`의 `DATABASE_URL`):
+
+```
+DATABASE_URL="postgresql://madebybro:madebybro@localhost:5432/madebybro?schema=public"
+```
+
+> Prisma 도입(ADR 0009)은 `apps/api` 스캐폴딩 후 `prisma db pull`로 위 스키마를 모델로 가져오는 방식. 자세히는 `team-docs/decisions/0009-orm-prisma.md`.
 
 ## 1. 백엔드 — NestJS (`apps/api`)
 
