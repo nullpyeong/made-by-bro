@@ -189,10 +189,10 @@
     <!-- 오픈 안내 -->
     <div class="live"><span class="dot"></span>온라인 신규 오픈 · 첫 1강 무료 미리보기</div>
 
-    <!-- 얼리버드 잔여석 (진짜 한정 · 다 차면 닫힘) -->
-    <div class="seats">
-      <div class="seats-top"><span class="lbl">얼리버드 평생가 · 선착순 100명</span><span class="left"><b>37</b>자리 남음</span></div>
-      <div class="seats-bar"><i style="width:63%"></i></div>
+    <!-- 얼리버드 잔여석 (진짜 한정 · 다 차면 닫힘) · 숫자는 /api/offers 실데이터로 교체(아래 스크립트) -->
+    <div class="seats" data-seats>
+      <div class="seats-top"><span class="lbl">얼리버드 평생가 · 선착순 <span data-seats-limit>100</span>명</span><span class="left"><b data-seats-left>37</b>자리 남음</span></div>
+      <div class="seats-bar"><i data-seats-bar style="width:63%"></i></div>
     </div>
 
     <!-- 가격 -->
@@ -236,6 +236,30 @@
 
 <div class="foot"><div class="inner"><span><b style="color:var(--color-text)">EPIC 에픽영어교습소</b></span><span>이용약관 · 환불정책 · 고객센터</span></div></div>
 <script src="app.js?v=39"></script>
+<script>
+/* 얼리버드 잔여석: /api/offers 실데이터로 교체. 실패 시 정적 기본값 유지(마케팅 페이지가 안 깨지게).
+   API 주소는 window.MBB_API_BASE 로 덮어쓸 수 있음(운영 배포 시). */
+(function(){
+  var API = window.MBB_API_BASE || 'http://localhost:3000/api';
+  var box = document.querySelector('[data-seats]');
+  if(!box) return;
+  fetch(API + '/offers').then(function(r){ return r.ok ? r.json() : Promise.reject(r.status); })
+    .then(function(list){
+      var o = Array.isArray(list) ? list.find(function(x){ return x.status === 'open'; }) : null;
+      if(!o) return; // 진행 중 오퍼 없음 → 정적값 유지
+      var left = (typeof o.seats_left === 'number') ? o.seats_left : (o.seat_limit - o.seat_taken);
+      var pct  = o.seat_limit ? Math.min(100, Math.round(o.seat_taken / o.seat_limit * 100)) : 0;
+      var nLeft = box.querySelector('[data-seats-left]');
+      var nLimit = box.querySelector('[data-seats-limit]');
+      var bar = box.querySelector('[data-seats-bar]');
+      if(nLeft) nLeft.textContent = left;
+      if(nLimit) nLimit.textContent = o.seat_limit;
+      if(bar) bar.style.width = pct + '%';
+      if(left <= 0) box.setAttribute('data-soldout','');
+    })
+    .catch(function(){ /* 정적 기본값 유지 */ });
+})();
+</script>
 <style>@media(max-width:840px){.container[data-tabscope]{grid-template-columns:1fr!important}.card[style*="sticky"]{position:static!important}.mcta{display:flex}body{padding-bottom:74px}}</style>
 </body>
 </html>
