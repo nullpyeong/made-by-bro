@@ -4,6 +4,8 @@ import { PrismaModule } from './prisma/prisma.module';
 import { HealthController } from './health/health.controller';
 import { CoursesModule } from './courses/courses.module';
 import { OffersModule } from './offers/offers.module';
+import { ReferralsModule } from './referrals/referrals.module';
+import { CohortsModule } from './cohorts/cohorts.module';
 
 @Module({
   imports: [
@@ -11,6 +13,8 @@ import { OffersModule } from './offers/offers.module';
     PrismaModule,
     CoursesModule,
     OffersModule,
+    ReferralsModule,
+    CohortsModule,
   ],
   controllers: [HealthController],
 })

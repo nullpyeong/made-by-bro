@@ -1,11 +1,31 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { fetchOpenOffer } from '../lib/api'
 
 /** 강의 상세 — 미리보기·핵심지표·탭(커리큘럼/소개/수강평/Q&A)·구매카드.
  * 탭·아코디언·모두펼치기·담기·바로결제·토스트는 전역 클릭위임으로 동작.
  * 진도 기반 done/locked 데코는 진도 엔진(player) 포팅 시 연결. 지금은 신규(시작 전) 기본 상태. */
 const MOBILE_STYLE = `@media(max-width:840px){.container[data-tabscope]{grid-template-columns:1fr!important}.card[data-buybox]{position:static!important}.mcta{display:flex}body{padding-bottom:74px}}`
 
+// 얼리버드 잔여석: /api/offers 실데이터. 로딩 실패 시 정적 기본값(37/100)을 유지한다.
+const FALLBACK_SEATS = { left: 37, limit: 100, pct: 63 }
+
 export default function Course() {
+  const [seats, setSeats] = useState(FALLBACK_SEATS)
+
+  useEffect(() => {
+    let alive = true
+    fetchOpenOffer().then((o) => {
+      if (!alive || !o) return // 실패·없음 → 정적 기본값 유지
+      const left = typeof o.seats_left === 'number' ? o.seats_left : o.seat_limit - o.seat_taken
+      const pct = o.seat_limit ? Math.min(100, Math.round((o.seat_taken / o.seat_limit) * 100)) : 0
+      setSeats({ left, limit: o.seat_limit, pct })
+    })
+    return () => {
+      alive = false
+    }
+  }, [])
+
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: MOBILE_STYLE }} />
@@ -256,10 +276,10 @@ export default function Course() {
 
           <div className="seats">
             <div className="seats-top">
-              <span className="lbl">얼리버드 평생가 · 선착순 100명</span>
-              <span className="left"><b>37</b>자리 남음</span>
+              <span className="lbl">얼리버드 평생가 · 선착순 {seats.limit}명</span>
+              <span className="left"><b>{seats.left}</b>자리 남음</span>
             </div>
-            <div className="seats-bar"><i style={{ width: '63%' }} /></div>
+            <div className="seats-bar"><i style={{ width: `${seats.pct}%` }} /></div>
           </div>
 
           <div className="price-row">
