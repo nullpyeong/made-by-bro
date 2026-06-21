@@ -7,6 +7,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { EventsService } from './events.service';
+import { Public } from '../auth/public.decorator';
 
 // 인증 도입 전: userId는 바디/쿼리로 받는다(추후 세션 주입).
 function toBigIntOpt(v: unknown, field: string): bigint | null {
@@ -23,7 +24,9 @@ export class EventsController {
   constructor(private readonly events: EventsService) {}
 
   // 범용 퍼널 이벤트 로깅(referral_click·review_submitted 등).
+  // 익명 랜딩 방문자도 발생시키므로 공개(userId는 선택).
   // 활성화는 보상 트리거가 걸려 있어 /rewards/activation 을 쓴다.
+  @Public()
   @Post()
   log(
     @Body()
@@ -48,7 +51,9 @@ export class EventsController {
     });
   }
 
-  // 퍼널 집계(전체 또는 cohortId 한정).
+  // 퍼널 집계(전체 또는 cohortId 한정) — Data 대시보드.
+  // TODO(ADR 0011 후속): 관리자 role 가드. 현재는 임시 공개.
+  @Public()
   @Get('funnel')
   funnel(@Query('cohortId') cohortId?: string) {
     return this.events.funnel(toBigIntOpt(cohortId, 'cohortId') ?? undefined);
