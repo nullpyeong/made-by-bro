@@ -6,6 +6,7 @@ import { EventsModule } from '../events/events.module';
 import { ReferralsModule } from '../referrals/referrals.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { KakaoService } from './kakao.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
 // 인증: 가입/로그인 + 세션(토큰) + 전역 가드(secure-by-default).
@@ -32,6 +33,10 @@ import { JwtAuthGuard } from './jwt-auth.guard';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, { provide: APP_GUARD, useClass: JwtAuthGuard }],
+  providers: [
+    AuthService,
+    KakaoService,
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+  ],
 })
 export class AuthModule {}

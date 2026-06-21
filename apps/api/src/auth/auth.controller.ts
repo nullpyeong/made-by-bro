@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, Req } from '@nestjs/common';
 import type { Request } from 'express';
 import { AuthService, SessionCtx } from './auth.service';
 import { Public } from './public.decorator';
@@ -49,6 +49,20 @@ export class AuthController {
   @Post('logout')
   logout(@Body('refreshToken') refreshToken: unknown) {
     return this.auth.logout(refreshToken);
+  }
+
+  // 카카오 인가 URL 발급(프론트가 이 URL로 리다이렉트).
+  @Public()
+  @Get('kakao')
+  kakaoAuthorize(@Query('state') state?: string) {
+    return { url: this.auth.kakaoAuthorizeUrl(state) };
+  }
+
+  // 카카오 로그인 — 인가코드(code) → 토큰. 신규/기존 모두 처리.
+  @Public()
+  @Post('kakao')
+  kakaoLogin(@Body('code') code: unknown, @Req() req: Request) {
+    return this.auth.loginWithKakao(code, sessionCtx(req));
   }
 
   // 현재 로그인 유저(가드 필요).

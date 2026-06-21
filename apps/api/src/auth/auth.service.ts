@@ -11,6 +11,7 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { EventsService } from '../events/events.service';
 import { ReferralsService } from '../referrals/referrals.service';
+import { KakaoService, KakaoProfile } from './kakao.service';
 
 // 세션 컨텍스트(기기/IP) — user_sessions 기록용.
 export interface SessionCtx {
@@ -19,6 +20,8 @@ export interface SessionCtx {
 }
 
 const REFRESH_TTL_DAYS = 30;
+// 계정당 동시 활성 세션(기기) 한도. 초과 시 가장 오래된 세션부터 폐기(schema.sql NOTE).
+const MAX_ACTIVE_SESSIONS = Number(process.env.MAX_ACTIVE_SESSIONS ?? 2);
 
 function sha256(s: string): string {
   return createHash('sha256').update(s).digest('hex');
@@ -33,6 +36,7 @@ export class AuthService {
     private readonly events: EventsService,
     private readonly referrals: ReferralsService,
     private readonly jwt: JwtService,
+    private readonly kakao: KakaoService,
   ) {}
 
   /**
@@ -179,6 +183,80 @@ export class AuthService {
     return this.safe(user);
   }
 
+  /** 프론트가 사용자를 보낼 카카오 인가 URL. */
+  kakaoAuthorizeUrl(state?: string): string {
+    return this.kakao.authorizeUrl(state);
+  }
+
+  /**
+   * 카카오 로그인 — 인가코드(code) → 프로필 조회 → 유저 upsert → 토큰 발급.
+   * 신규면 signup, 기존이면 login 이벤트.
+   */
+  async loginWithKakao(codeRaw: unknown, ctx: SessionCtx = {}) {
+    const code = typeof codeRaw === 'string' ? codeRaw.trim() : '';
+    if (!code) throw new BadRequestException('인가 코드(code)가 필요합니다');
+    const profile = await this.kakao.fetchProfile(code);
+    const { user, created } = await this.upsertKakaoUser(profile);
+    await this.events.log({ userId: user.id, type: created ? 'signup' : 'login' });
+    const tokens = await this.issueTokens(user.id, user.role, ctx);
+    return { user: this.safe(user), created, ...tokens };
+  }
+
+  /**
+   * 카카오 프로필 → 유저 매핑.
+   *  1) kakao_id 일치 = 기존 소셜 계정
+   *  2) (검증된)이메일 일치 = 기존 계정에 카카오 연결(계정 통합)
+   *  3) 없으면 신규 소셜 계정 생성(비번 NULL). 이메일 없으면 합성 이메일.
+   */
+  private async upsertKakaoUser(profile: KakaoProfile) {
+    const byKakao = await this.prisma.users.findFirst({
+      where: { kakao_id: profile.kakaoId },
+    });
+    if (byKakao) return { user: byKakao, created: false };
+
+    if (profile.email) {
+      const byEmail = await this.prisma.users.findUnique({
+        where: { email: profile.email },
+      });
+      if (byEmail) {
+        const linked = await this.prisma.users.update({
+          where: { id: byEmail.id },
+          data: {
+            kakao_id: profile.kakaoId,
+            profile_image: byEmail.profile_image ?? profile.profileImage,
+          },
+        });
+        return { user: linked, created: false };
+      }
+    }
+
+    const email = profile.email ?? `kakao_${profile.kakaoId}@kakao.local`;
+    try {
+      const created = await this.prisma.users.create({
+        data: {
+          email,
+          password: null, // 소셜 전용 계정
+          name: profile.name,
+          kakao_id: profile.kakaoId,
+          profile_image: profile.profileImage,
+        },
+      });
+      return { user: created, created: true };
+    } catch (e) {
+      // 동시 가입 경쟁 등으로 kakao_id가 막 생긴 경우 한 번 더 조회.
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === 'P2002'
+      ) {
+        const again = await this.prisma.users.findFirst({
+          where: { kakao_id: profile.kakaoId },
+        });
+        if (again) return { user: again, created: false };
+      }
+      throw e;
+    }
+  }
+
   // ---- 내부 헬퍼 ----
 
   private async issueTokens(userId: bigint, role: string, ctx: SessionCtx) {
@@ -192,10 +270,34 @@ export class AuthService {
         expires_at: this.refreshExpiry(),
       },
     });
+    await this.enforceSessionLimit(userId);
     return {
       accessToken: this.signAccess(userId, role),
       refreshToken: `${session.id}.${secret}`,
     };
+  }
+
+  /**
+   * 활성 세션 수 제한(기본 2기기) — 계정공유 방지.
+   * 만료 세션 정리 후, 한도 초과분을 가장 오래된(last_seen_at) 순으로 폐기.
+   * 방금 만든 세션은 last_seen_at=now 라 항상 살아남는다.
+   */
+  private async enforceSessionLimit(userId: bigint) {
+    if (!Number.isFinite(MAX_ACTIVE_SESSIONS) || MAX_ACTIVE_SESSIONS < 1) return;
+    await this.prisma.user_sessions.deleteMany({
+      where: { user_id: userId, expires_at: { lte: new Date() } },
+    });
+    const active = await this.prisma.user_sessions.findMany({
+      where: { user_id: userId },
+      orderBy: { last_seen_at: 'desc' },
+      select: { id: true },
+    });
+    if (active.length > MAX_ACTIVE_SESSIONS) {
+      const evict = active.slice(MAX_ACTIVE_SESSIONS).map((s) => s.id);
+      await this.prisma.user_sessions.deleteMany({
+        where: { id: { in: evict } },
+      });
+    }
   }
 
   private signAccess(userId: bigint, role: string): string {
