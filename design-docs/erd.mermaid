@@ -46,6 +46,19 @@ erDiagram
     coupons ||--o{ payments : "할인"
     coupons ||--o{ coupon_redemptions : "사용이력"
 
+    %% [0006] 얼리버드/시딩/추천/활성화
+    courses ||--o{ offers : "한정오퍼대상"
+    offers ||--o{ payments : "얼리버드귀속"
+    cohorts ||--o{ cohort_members : "코호트멤버"
+    users ||--o{ cohort_members : "시딩참여"
+    users ||--o| referral_codes : "추천코드(1인1개)"
+    referral_codes ||--o{ referrals : "추천발생"
+    users ||--o{ referrals : "추천인"
+    payments ||--o| referrals : "유료전환귀속"
+    users ||--o{ rewards : "보상수령"
+    referrals ||--o{ rewards : "보상발생"
+    users ||--o{ events : "활동로그"
+
     qna ||--o{ qna : "답글(parent)"
 
     users {
@@ -217,6 +230,7 @@ erDiagram
         bigint user_id FK
         bigint course_id FK "단건(nullable)"
         bigint subscription_id FK "구독(nullable)"
+        bigint offer_id FK "얼리버드(nullable)"
         bigint coupon_id FK
         int amount "할인후"
         varchar pg_provider
@@ -287,4 +301,68 @@ erDiagram
         varchar title
         text content
         bool pinned
+    }
+
+    %% [0006] 콜드스타트 캠페인
+    offers {
+        bigint id PK
+        bigint course_id FK "NULL=전체/멤버십"
+        varchar name "얼리버드 1기"
+        int price "얼리버드가"
+        int seat_limit "선착순한도"
+        int seat_taken "점유"
+        enum status "open|sold_out|closed"
+        timestamptz starts_at
+        timestamptz ends_at
+    }
+
+    cohorts {
+        bigint id PK
+        varchar name "시딩 1기"
+        enum status "active|completed|archived"
+        text notes
+        timestamptz started_at
+    }
+
+    cohort_members {
+        bigint id PK
+        bigint cohort_id FK
+        bigint user_id FK
+        timestamptz joined_at
+    }
+
+    referral_codes {
+        bigint id PK
+        bigint user_id FK "추천인(1인1코드)"
+        varchar code UK "BRO-XXXX"
+        bool is_active
+    }
+
+    referrals {
+        bigint id PK
+        bigint code_id FK
+        bigint referrer_user_id FK "추천한사람"
+        bigint referred_user_id FK "피추천자(UK,nullable)"
+        enum status "pending|signed_up|activated|converted|rewarded"
+        bigint converted_payment_id FK "CAC귀속"
+    }
+
+    rewards {
+        bigint id PK
+        bigint user_id FK "수령자"
+        bigint referral_id FK
+        enum kind "sub_extension|discount(비현금)"
+        enum status "pending|granted|redeemed|revoked"
+        int amount "연장일수|할인액"
+        varchar note
+    }
+
+    events {
+        bigint id PK
+        bigint user_id FK "nullable(익명)"
+        varchar type "activation|referral|conversion..."
+        varchar ref_table
+        bigint ref_id
+        jsonb props
+        timestamptz occurred_at
     }
