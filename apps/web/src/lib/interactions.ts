@@ -203,10 +203,19 @@ export function mountGlobalHandlers(navigate: NavigateFn): () => void {
   }
 
   const onSegment = (e: MouseEvent) => {
-    const s = (e.target as HTMLElement).closest('.segment .seg')
-    if (!s) return
-    s.parentElement!.querySelectorAll('.seg').forEach((x) => x.classList.remove('on'))
-    s.classList.add('on')
+    const t = e.target as HTMLElement
+    const s = t.closest('.segment .seg')
+    if (s) {
+      s.parentElement!.querySelectorAll('.seg').forEach((x) => x.classList.remove('on'))
+      s.classList.add('on')
+      return
+    }
+    // 관리자 차트 기간 토글(.seg2)
+    const b = t.closest('.seg2 button')
+    if (b) {
+      b.parentElement!.querySelectorAll('button').forEach((x) => x.classList.remove('on'))
+      b.classList.add('on')
+    }
   }
   const onDrawerOutside = (e: MouseEvent) => {
     const d = document.getElementById('drawer')
