@@ -18,6 +18,7 @@
 | [0012](0012-prisma-migrate-전환.md) | SQL-first → Prisma migrate 전환 (스키마 SSOT 이전) | Engineering | ✅ 채택 | 2026-06-21 |
 | [0013](0013-결제-웹훅-서명검증.md) | 결제 웹훅 검증 (HMAC 서명 + fail-closed) | Engineering | 🟡 검토중 | 2026-06-21 |
 | [0014](0014-web-tailwind-도입.md) | 웹 CSS 전략 — Tailwind 도입 (토큰 브리지 + 점진) | Engineering/Design | ✅ 채택 (방향) | 2026-06-21 |
+| [0015](0015-결제보류-콘텐츠우선.md) | 런칭 우선순위 — 실결제 보류, 콘텐츠 먼저 | Product | ✅ 채택 | 2026-06-21 |
 
 ## 상태 범례
 - 🟡 `검토중` — 아직 안 정해짐
