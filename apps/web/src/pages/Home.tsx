@@ -1,12 +1,14 @@
-import { useState, type CSSProperties } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { addToCart, getCart, toast } from '../lib/interactions'
+import { fetchPublishedCourses, type ApiCourse } from '../lib/api'
 
 const cssVar = (obj: Record<string, string | number>) => obj as CSSProperties
 
 type Course = {
   to: string
-  img?: string
+  img?: string // /assets/ 하위 큐레이션 이미지 파일명
+  imgUrl?: string // 절대 URL 썸네일(API 코스). 있으면 img보다 우선
   gx?: string // 그라데이션 클래스(무료 파닉스)
   cat?: string
   tag?: { label: string; cls: string }
@@ -29,6 +31,21 @@ const COURSES: Course[] = [
   { to: '/course', img: 'course-writing.jpg', cat: '영작', lv: '중등', title: '중등 서술형 영작 기초', meta: '신규 오픈', price: '₩50,000', cartName: '중등 서술형 영작 기초' },
 ]
 
+/** API 코스(최소 필드)를 카드 모델로 매핑. 큐레이션 메타(카테고리/배지/레벨)는
+ *  API에 없으므로 비워둔다 — 실데이터는 제목/썸네일/가격만으로 정직하게 렌더. */
+function apiToCourse(c: ApiCourse): Course {
+  return {
+    to: '/course',
+    imgUrl: c.thumbnail_url ?? undefined,
+    gx: c.thumbnail_url ? undefined : 'gx-teal', // 썸네일 없으면 그라데이션 폴백
+    lv: '',
+    title: c.title,
+    meta: '신규 오픈',
+    price: `₩${c.price.toLocaleString('ko-KR')}`,
+    cartName: c.title,
+  }
+}
+
 function CourseCard({ c }: { c: Course }) {
   const navigate = useNavigate()
   const [added, setAdded] = useState(false)
@@ -45,10 +62,12 @@ function CourseCard({ c }: { c: Course }) {
     toast(ok ? `장바구니에 담았어요 (${getCart().length})` : '이미 장바구니에 있어요')
   }
 
+  const bgUrl = c.imgUrl ?? (c.img ? `/assets/${c.img}` : null)
+
   return (
     <Link className="cc" to={c.to}>
-      {c.img ? (
-        <div className="th photo" style={{ backgroundImage: `url(/assets/${c.img})` }}>
+      {bgUrl ? (
+        <div className="th photo" style={{ backgroundImage: `url(${bgUrl})` }}>
           {c.cat && <span className="cat">{c.cat}</span>}
           {c.tag && <span className={`tag badge ${c.tag.cls}`}>{c.tag.label}</span>}
           <span className="lv">{c.lv}</span>
@@ -82,6 +101,13 @@ function CourseCard({ c }: { c: Course }) {
 }
 
 export default function Home() {
+  // 공개 코스를 API에서 불러와 실데이터로 렌더. 비어 있거나 실패하면 큐레이션 정적 목록 유지.
+  const [apiCourses, setApiCourses] = useState<ApiCourse[] | null>(null)
+  useEffect(() => {
+    fetchPublishedCourses().then(setApiCourses)
+  }, [])
+  const courses: Course[] = apiCourses ? apiCourses.map(apiToCourse) : COURSES
+
   return (
     <>
       {/* ===== GNB ===== */}
@@ -314,7 +340,7 @@ export default function Home() {
           <span className="chip on">전체</span><span className="chip">회화</span><span className="chip">문법</span><span className="chip">내신</span><span className="chip">독해·어휘</span><span className="chip">초등</span><span className="chip">중등</span>
         </div>
         <div className="grid">
-          {COURSES.map((c, i) => <CourseCard key={i} c={c} />)}
+          {courses.map((c, i) => <CourseCard key={i} c={c} />)}
         </div>
       </section>
 

@@ -27,6 +27,27 @@ export async function fetchOpenOffer(): Promise<Offer | null> {
   }
 }
 
+export interface ApiCourse {
+  id: string
+  title: string
+  description: string | null
+  thumbnail_url: string | null
+  price: number
+  status: string
+}
+
+/** 공개(published) 코스 목록. 실패하거나 비어 있으면 null(호출부가 정적 카탈로그 유지). */
+export async function fetchPublishedCourses(): Promise<ApiCourse[] | null> {
+  try {
+    const r = await fetch(`${API_BASE}/courses`)
+    if (!r.ok) return null
+    const list: ApiCourse[] = await r.json()
+    return Array.isArray(list) && list.length > 0 ? list : null
+  } catch {
+    return null
+  }
+}
+
 /* ===== 인증 세션 (ADR 0011) =====
  * 로그인 성공 시 access JWT를 epic-access-token에 저장한다 → Authorization: Bearer.
  * recordActivation 등 인증 필요한 호출은 이 토큰을 읽고, 없으면 자동으로 건너뛴다(무중단). */
