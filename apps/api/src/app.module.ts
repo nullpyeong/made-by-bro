@@ -11,6 +11,7 @@ import { RewardsModule } from './rewards/rewards.module';
 import { AuthModule } from './auth/auth.module';
 import { PaymentsModule } from './payments/payments.module';
 import { EnrollmentsModule } from './enrollments/enrollments.module';
+import { ProgressModule } from './progress/progress.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { EnrollmentsModule } from './enrollments/enrollments.module';
     AuthModule,
     PaymentsModule,
     EnrollmentsModule,
+    ProgressModule,
   ],
   controllers: [HealthController],
 })

@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { initLesson } from '../lib/engine'
-import { recordActivation } from '../lib/api'
+import { recordActivation, saveProgress } from '../lib/api'
 
 // 첫 강의 수강(활성화) 백엔드 기록 1회 — ADR 0006 추천인 보상 트리거.
 // 영상이 정적 목업이라 "재생"의 충실한 신호 = 플레이어에 유효한 레슨이 처음 로드된 순간.
@@ -108,7 +108,13 @@ export default function Player() {
     // 유효한 레슨이 로드된 뒤(=수강 시작) 활성화 1회 기록.
     // initLesson()이 동기적으로 [data-lesson]에 data-lesson-id를 세팅한다.
     const root = document.querySelector('[data-lesson]')
-    if (root?.getAttribute('data-lesson-id')) void maybeRecordActivation()
+    const lessonId = root?.getAttribute('data-lesson-id')
+    if (lessonId) {
+      void maybeRecordActivation()
+      // 진도 쓰기 경로(토대) — 실제 DB lecture id(숫자)일 때만 발화.
+      // 정적 커리큘럼의 "1-1" 목업 id면 saveProgress가 'not-real-lecture'로 건너뜀.
+      void saveProgress({ lectureId: lessonId })
+    }
   }, [])
   return (
     <>

@@ -408,6 +408,40 @@ export async function fetchMyEnrollments(): Promise<Enrollment[] | null> {
   }
 }
 
+/* ===== 학습 진도(progress) — 플레이어, 로그인 유저 본인(세션) =====
+ * 수강목록 진도율(fetchMyEnrollments)이 progress.completed를 세므로 이 쓰기 경로가 그 토대다.
+ * 정적 커리큘럼의 레슨 id는 "1-1" 같은 목업이라 실제 lectures.id(숫자)가 아니다 →
+ * 숫자 id가 아니면(또는 미로그인이면) 조용히 건너뛴다(recordActivation과 동일한 무중단 게이트).
+ * DB 기반 레슨이 플레이어를 구동하게 되면 그때부터 실제로 진도가 적재된다. */
+export type SaveProgressResult =
+  | { ok: true; data: unknown }
+  | { ok: false; reason: 'no-auth' | 'not-real-lecture' | 'error' }
+
+function isRealLectureId(lessonId: string): boolean {
+  return /^\d+$/.test(lessonId)
+}
+
+export async function saveProgress(input: {
+  lectureId: string
+  positionSeconds?: number
+  watchedSeconds?: number
+  completed?: boolean
+}): Promise<SaveProgressResult> {
+  if (!getAccessToken()) return { ok: false, reason: 'no-auth' }
+  if (!isRealLectureId(input.lectureId)) return { ok: false, reason: 'not-real-lecture' }
+  try {
+    const r = await authedFetch('/me/progress', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input),
+    })
+    if (!r.ok) return { ok: false, reason: 'error' }
+    return { ok: true, data: await r.json().catch(() => null) }
+  } catch {
+    return { ok: false, reason: 'error' }
+  }
+}
+
 /* ===== 관리자(admin) — 전역 JwtAuthGuard + RolesGuard('admin') (ADR 0011) =====
  * 401(미로그인)/403(권한없음)을 status로 구분해 호출부가 "관리자 권한 필요"를 표시한다. */
 export interface Cohort {
