@@ -9,6 +9,7 @@ import Cart from './pages/Cart'
 import Checkout from './pages/Checkout'
 import Admin from './pages/Admin'
 import Player from './pages/Player'
+import Mypage from './pages/Mypage'
 import Stub from './pages/Stub'
 
 export default function App() {
@@ -18,7 +19,7 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/course" element={<Course />} />
         <Route path="/player" element={<Player />} />
-        <Route path="/mypage" element={<Stub title="마이페이지" />} />
+        <Route path="/mypage" element={<Mypage />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/complete" element={<Complete />} />
