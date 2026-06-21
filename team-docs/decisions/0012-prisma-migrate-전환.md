@@ -2,10 +2,10 @@
 
 | | |
 |---|---|
-| 상태 | 🟡 검토중 |
+| 상태 | ✅ 채택 |
 | 날짜 | 2026-06-21 |
 | 파트 | Engineering |
-| 결정자 | 제안: AI / 확정: 미정 (백엔드 = 누나 영역, 사람 확정 필요) |
+| 결정자 | 제안: AI / 확정: 김지평 |
 
 ## 맥락
 현재 백엔드 스키마 관리는 **SQL-first + introspection** 방식이다:
@@ -58,10 +58,26 @@ design-docs/schema.sql  (손으로 쓰는 DDL = 현재 SSOT)
 > ADR은 AI가 임의로 `채택`하지 않는다. `채택`으로 올리기 전에 **반드시 사람이 결정권을 행사**해야 하며, 그 기록을 아래에 남긴다.
 > 사람 확정 전에는 상태를 `검토중`으로 둔다.
 
-- **확정자**: (미정 — 백엔드 영역이라 누나/김지평 합의 필요)
-- **확정일**: (미정)
-- **확정 범위**: (미정)
-- **유보**:
-  - 이건 **AI 제안서**다. 백엔드는 누나 작업 영역이므로, 전환 여부·시점은 누나와 합의해야 한다.
-  - baseline 실행 전, 두 작업자 로컬 DB 정렬 여부 확인 필요.
-  - schema.sql 을 아카이브로 남길지/제거할지는 확정 시 결정.
+- **확정자**: 김지평
+- **확정일**: 2026-06-21
+- **확정 범위**: Prisma migrate 전환 승인. baseline 마이그레이션(`0_init`) 생성 + package 스크립트 도입까지 진행. schema.sql 은 **아카이브로 보존**(제거하지 않음).
+
+### 실제로 한 것 (AI 실행, 2026-06-21)
+- `apps/api/prisma/schema.prisma` 에 익스텐션 선언 추가: `previewFeatures = ["postgresqlExtensions"]` + `datasource.extensions = [pgcrypto, pg_trgm, citext]`.
+  - **이유**: 첫 baseline 생성 시 `migrate diff` 가 `CREATE EXTENSION` 을 누락해(스키마에 미선언) 빈 DB 적용이 `citext` 타입 부재로 실패했다. 익스텐션을 SSOT(schema.prisma)에 명시해 실제 DB와 일치시킴. (introspection 기반 baseline 의 전형적 누락 — 검증으로 잡음)
+- `apps/api/prisma/migrations/0_init/migration.sql` 생성 — `migrate diff --from-empty --to-schema-datamodel` 산출(DB 불필요). 31 테이블 · 17 enum · 50 FK · 익스텐션 3.
+- `apps/api/prisma/migrations/migration_lock.toml` 추가 (provider=postgresql).
+- `apps/api/package.json` 스크립트 추가: `prisma:migrate`(dev) · `prisma:deploy`(prod) · `prisma:studio` · `prisma:baseline`(= `migrate resolve --applied 0_init`).
+- **검증**: 일회용 docker postgres(빈 DB)에 `0_init/migration.sql` 적용 → **exit 0, 31 테이블·17 enum·50 FK·익스텐션 3개 전부 생성** 확인.
+
+### 각 작업자가 1회씩 직접 해야 할 단계 (DB 필요 — 여기선 미실행)
+> AI 작업 환경엔 실 DB(docker postgres)가 떠 있지 않고 `.env`/prisma 설치도 없어서, **DB를 건드리는 단계는 실행하지 못함**. 각자 로컬에서 1회:
+1. 기존 로컬 DB가 schema.prisma 와 일치하는지 확인 (`pnpm --filter api prisma:pull` 으로 드리프트 점검)
+2. 기존 DB를 baseline 으로 표시: `pnpm --filter api prisma:baseline` (= `migrate resolve --applied 0_init`) — 기존 DB에 `0_init` 을 "이미 적용됨" 처리(테이블 재생성 안 함)
+3. 새 PC/CI 처럼 **빈 DB** 라면 위 대신 `pnpm --filter api prisma:deploy` 한 번으로 baseline 부터 재구성
+4. 이후 스키마 변경은 `schema.prisma` 수정 → `pnpm --filter api prisma:migrate -- --name <변경명>` 으로만
+
+### 후속/유보
+- **누나 조율 필수**: baseline 시점에 누나 로컬 DB가 schema.prisma 와 갈라져 있으면 위 2단계 전에 한 번 정렬 필요. 갈라짐 있으면 `migrate resolve` 대신 DB 재생성 후 `migrate deploy` 권장.
+- `previewFeatures` 추가로 `@prisma/client` 재생성 필요(`prisma:generate`) — 설치된 PC에서 1회.
+- schema.sql 은 `design-docs/` 에 **아카이브로 보존**(SSOT 는 이제 `prisma/migrations/`). 상단에 전환 안내 배너 추가함.

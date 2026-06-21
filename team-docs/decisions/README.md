@@ -15,7 +15,7 @@
 | [0009](0009-orm-prisma.md) | ORM = Prisma | Engineering | ✅ 채택 | 2026-06-21 |
 | [0010](0010-web-포팅-CSS전략.md) | 웹 React 포팅 CSS 전략 (기존 app.css 재사용) | Engineering/Design | 🔁 대체됨 → 0014 | 2026-06-21 |
 | [0011](0011-인증-세션-토큰전략.md) | 인증·세션 토큰 전략 (JWT access + refresh 회전) | Engineering | ✅ 채택 | 2026-06-21 |
-| [0012](0012-prisma-migrate-전환.md) | SQL-first → Prisma migrate 전환 (스키마 SSOT 이전) | Engineering | 🟡 검토중 | 2026-06-21 |
+| [0012](0012-prisma-migrate-전환.md) | SQL-first → Prisma migrate 전환 (스키마 SSOT 이전) | Engineering | ✅ 채택 | 2026-06-21 |
 | [0013](0013-결제-웹훅-서명검증.md) | 결제 웹훅 검증 (HMAC 서명 + fail-closed) | Engineering | 🟡 검토중 | 2026-06-21 |
 | [0014](0014-web-tailwind-도입.md) | 웹 CSS 전략 — Tailwind 도입 (토큰 브리지 + 점진) | Engineering/Design | ✅ 채택 (방향) | 2026-06-21 |
 
