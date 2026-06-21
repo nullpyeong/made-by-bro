@@ -67,6 +67,7 @@ const BODY = `
     <span class="tab" data-tab="pay">결제내역</span>
     <span class="tab" data-tab="noti">알림</span>
     <span class="tab" data-tab="prof">프로필</span>
+    <a class="tab" href="/referrals" style="text-decoration:none">추천·보상</a>
   </div>
 
   <!-- 내 강의 -->

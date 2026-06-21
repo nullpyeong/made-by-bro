@@ -194,3 +194,232 @@ export async function recordActivation(): Promise<ActivationResult> {
     return { ok: false, reason: 'error' }
   }
 }
+
+/* ===== 인증 헤더가 붙는 공용 fetch =====
+ * 저장된 access JWT가 있으면 Authorization: Bearer를 자동으로 단다. */
+async function authedFetch(path: string, init: RequestInit = {}): Promise<Response> {
+  const token = getAccessToken()
+  const headers = new Headers(init.headers)
+  if (token) headers.set('Authorization', `Bearer ${token}`)
+  return fetch(`${API_BASE}${path}`, { ...init, headers })
+}
+
+/* ===== 회원가입 (POST /auth/signup) =====
+ * 성공 시 자동 로그인(토큰 발급·저장). 선택적 추천코드(referralCode)는 best-effort —
+ * 코드가 잘못돼도 가입은 성공하고 referralWarning으로 알린다(ADR 0006). */
+export type SignupResult =
+  | { ok: true; user: AuthUser; referralWarning: string | null }
+  | { ok: false; reason: 'invalid' | 'conflict' | 'network'; message: string }
+
+export async function signup(input: {
+  email: string
+  password: string
+  name: string
+  referralCode?: string
+}): Promise<SignupResult> {
+  let r: Response
+  try {
+    r = await fetch(`${API_BASE}/auth/signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input),
+    })
+  } catch {
+    return { ok: false, reason: 'network', message: '서버에 연결할 수 없어요' }
+  }
+  if (!r.ok) {
+    const msg = await r
+      .json()
+      .then((b) => (b?.message as string) ?? '')
+      .catch(() => '')
+    return {
+      ok: false,
+      reason: r.status === 409 ? 'conflict' : 'invalid',
+      message: msg || '회원가입에 실패했습니다',
+    }
+  }
+  const data = (await r.json().catch(() => null)) as
+    | {
+        accessToken?: string
+        refreshToken?: string
+        user?: AuthUser
+        referralWarning?: string | null
+      }
+    | null
+  if (!data?.accessToken || !data?.user) {
+    return { ok: false, reason: 'invalid', message: '회원가입 응답이 올바르지 않습니다' }
+  }
+  setSession(data.accessToken, data.refreshToken ?? '', data.user)
+  return { ok: true, user: data.user, referralWarning: data.referralWarning ?? null }
+}
+
+/* ===== 카카오 OAuth (GET/POST /auth/kakao) =====
+ * 1) getKakaoAuthorizeUrl()로 인가 URL을 받아 프론트가 리다이렉트.
+ * 2) 카카오가 ?code= 와 함께 콜백 → loginWithKakao(code)로 토큰 교환·세션 저장. */
+export async function getKakaoAuthorizeUrl(state?: string): Promise<string | null> {
+  try {
+    const q = state ? `?state=${encodeURIComponent(state)}` : ''
+    const r = await fetch(`${API_BASE}/auth/kakao${q}`)
+    if (!r.ok) return null
+    const data = (await r.json().catch(() => null)) as { url?: string } | null
+    return data?.url ?? null
+  } catch {
+    return null
+  }
+}
+
+export async function loginWithKakao(code: string): Promise<LoginResult> {
+  let r: Response
+  try {
+    r = await fetch(`${API_BASE}/auth/kakao`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code }),
+    })
+  } catch {
+    return { ok: false, reason: 'network', message: '서버에 연결할 수 없어요' }
+  }
+  if (!r.ok) {
+    const msg = await r
+      .json()
+      .then((b) => (b?.message as string) ?? '')
+      .catch(() => '')
+    return { ok: false, reason: 'invalid', message: msg || '카카오 로그인에 실패했습니다' }
+  }
+  const data = (await r.json().catch(() => null)) as
+    | { accessToken?: string; refreshToken?: string; user?: AuthUser }
+    | null
+  if (!data?.accessToken || !data?.user) {
+    return { ok: false, reason: 'invalid', message: '카카오 로그인 응답이 올바르지 않습니다' }
+  }
+  setSession(data.accessToken, data.refreshToken ?? '', data.user)
+  return { ok: true, user: data.user }
+}
+
+/* ===== 추천(referrals) — 로그인 유저 본인 기준(세션) ===== */
+export interface Referral {
+  id: string
+  referrer_user_id: string
+  referred_user_id: string | null
+  code: string
+  status: string
+  created_at: string
+}
+
+export interface ReferralSummary {
+  code: string | null
+  total: number
+  by_status: Record<string, number>
+  referrals: Referral[]
+}
+
+/** 내 추천 요약(GET /referrals/me) — 코드·단계집계·목록. 미로그인/실패면 null. */
+export async function fetchReferralSummary(): Promise<ReferralSummary | null> {
+  try {
+    const r = await authedFetch('/referrals/me')
+    if (!r.ok) return null
+    return (await r.json().catch(() => null)) as ReferralSummary | null
+  } catch {
+    return null
+  }
+}
+
+/** 내 추천코드 발급/조회(POST /referrals/code, get-or-create). 실패면 null. */
+export async function issueReferralCode(): Promise<string | null> {
+  try {
+    const r = await authedFetch('/referrals/code', { method: 'POST' })
+    if (!r.ok) return null
+    const data = (await r.json().catch(() => null)) as { code?: string } | null
+    return data?.code ?? null
+  } catch {
+    return null
+  }
+}
+
+/* ===== 보상(rewards) — 추천인 대시보드 ===== */
+export interface Reward {
+  id: string
+  user_id: string
+  referral_id: string | null
+  type: string
+  amount: number | null
+  status: string
+  created_at: string
+}
+
+/** 내 보상 목록(GET /rewards/me). 미로그인/실패면 빈 배열. */
+export async function fetchMyRewards(): Promise<Reward[]> {
+  try {
+    const r = await authedFetch('/rewards/me')
+    if (!r.ok) return []
+    const list = await r.json().catch(() => null)
+    return Array.isArray(list) ? (list as Reward[]) : []
+  } catch {
+    return []
+  }
+}
+
+/* ===== 관리자(admin) — 전역 JwtAuthGuard + RolesGuard('admin') (ADR 0011) =====
+ * 401(미로그인)/403(권한없음)을 status로 구분해 호출부가 "관리자 권한 필요"를 표시한다. */
+export interface Cohort {
+  id: string
+  name: string
+  notes: string | null
+  started_at: string | null
+  created_at: string
+  member_count: number
+}
+
+export interface Funnel {
+  cohort_id: string | null
+  total: number
+  by_type: Record<string, number>
+}
+
+export type AdminResult<T> =
+  | { ok: true; data: T }
+  | { ok: false; status: number; message: string }
+
+async function adminRequest<T>(
+  method: string,
+  path: string,
+  body?: unknown,
+): Promise<AdminResult<T>> {
+  let r: Response
+  try {
+    r = await authedFetch(path, {
+      method,
+      headers: body !== undefined ? { 'Content-Type': 'application/json' } : undefined,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    })
+  } catch {
+    return { ok: false, status: 0, message: '서버에 연결할 수 없어요' }
+  }
+  if (!r.ok) {
+    const msg = await r
+      .json()
+      .then((b) => (b?.message as string) ?? '')
+      .catch(() => '')
+    return { ok: false, status: r.status, message: msg || `요청 실패 (${r.status})` }
+  }
+  const data = (await r.json().catch(() => null)) as T
+  return { ok: true, data }
+}
+
+/** 코호트 목록 + 멤버 수(GET /cohorts). */
+export const fetchCohorts = () => adminRequest<Cohort[]>('GET', '/cohorts')
+
+/** 코호트 생성(POST /cohorts). */
+export const createCohort = (input: { name: string; notes?: string; startedAt?: string }) =>
+  adminRequest<Cohort>('POST', '/cohorts', input)
+
+/** 퍼널 집계(GET /events/funnel, cohortId 선택). M1 활성화율·M3 CAC 기초. */
+export const fetchFunnel = (cohortId?: string) =>
+  adminRequest<Funnel>(
+    'GET',
+    `/events/funnel${cohortId ? `?cohortId=${encodeURIComponent(cohortId)}` : ''}`,
+  )
+
+/** 보상 수동 지급(POST /rewards/grant). */
+export const grantReward = (referralId: string) =>
+  adminRequest<unknown>('POST', '/rewards/grant', { referralId })
