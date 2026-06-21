@@ -1,0 +1,633 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model announcements {
+  id         BigInt   @id @default(autoincrement())
+  course_id  BigInt?
+  title      String   @db.VarChar(200)
+  content    String
+  pinned     Boolean  @default(false)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  courses    courses? @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([course_id], map: "idx_announcements_course")
+}
+
+model attachments {
+  id         BigInt   @id @default(autoincrement())
+  lecture_id BigInt
+  file_url   String
+  filename   String   @db.VarChar(255)
+  size_bytes BigInt   @default(0)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  lectures   lectures @relation(fields: [lecture_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([lecture_id], map: "idx_attachments_lecture")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model bookmarks {
+  id           BigInt   @id @default(autoincrement())
+  user_id      BigInt
+  lecture_id   BigInt
+  position_sec Int
+  label        String?  @db.VarChar(200)
+  created_at   DateTime @default(now()) @db.Timestamptz(6)
+  lectures     lectures @relation(fields: [lecture_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users        users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([user_id, lecture_id], map: "idx_bookmarks_user_lec")
+}
+
+model categories {
+  id      BigInt    @id @default(autoincrement())
+  name    String    @db.VarChar(100)
+  slug    String    @unique @db.VarChar(120)
+  courses courses[]
+}
+
+model certificates {
+  id        BigInt   @id @default(autoincrement())
+  user_id   BigInt
+  course_id BigInt
+  cert_no   String   @unique @db.VarChar(64)
+  pdf_url   String?
+  issued_at DateTime @default(now()) @db.Timestamptz(6)
+  courses   courses  @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users     users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, course_id])
+  @@index([user_id], map: "idx_certificates_user")
+}
+
+model cohort_members {
+  id        BigInt   @id @default(autoincrement())
+  cohort_id BigInt
+  user_id   BigInt
+  joined_at DateTime @default(now()) @db.Timestamptz(6)
+  cohorts   cohorts  @relation(fields: [cohort_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users     users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([cohort_id, user_id])
+  @@index([cohort_id], map: "idx_cohort_members_cohort")
+  @@index([user_id], map: "idx_cohort_members_user")
+}
+
+model cohorts {
+  id             BigInt           @id @default(autoincrement())
+  name           String           @db.VarChar(120)
+  status         cohort_status    @default(active)
+  notes          String?
+  started_at     DateTime?        @db.Timestamptz(6)
+  created_at     DateTime         @default(now()) @db.Timestamptz(6)
+  cohort_members cohort_members[]
+}
+
+model coupon_redemptions {
+  id         BigInt   @id @default(autoincrement())
+  coupon_id  BigInt
+  user_id    BigInt
+  payment_id BigInt
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  coupons    coupons  @relation(fields: [coupon_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  payments   payments @relation(fields: [payment_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([coupon_id, user_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model coupons {
+  id                 BigInt               @id @default(autoincrement())
+  code               String               @unique @db.VarChar(50)
+  discount_type      discount_type
+  discount_value     Int
+  min_amount         Int                  @default(0)
+  max_uses           Int?
+  used_count         Int                  @default(0)
+  valid_until        DateTime?            @db.Timestamptz(6)
+  created_at         DateTime             @default(now()) @db.Timestamptz(6)
+  coupon_redemptions coupon_redemptions[]
+  payments           payments[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model courses {
+  id            BigInt          @id @default(autoincrement())
+  category_id   BigInt?
+  instructor_id BigInt?
+  title         String          @db.VarChar(200)
+  description   String?
+  thumbnail_url String?
+  price         Int             @default(0)
+  status        course_status   @default(draft)
+  created_at    DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime        @default(now()) @db.Timestamptz(6)
+  announcements announcements[]
+  certificates  certificates[]
+  categories    categories?     @relation(fields: [category_id], references: [id], onUpdate: NoAction)
+  users         users?          @relation(fields: [instructor_id], references: [id], onUpdate: NoAction)
+  enrollments   enrollments[]
+  offers        offers[]
+  payments      payments[]
+  qna           qna[]
+  reviews       reviews[]
+  sections      sections[]
+
+  @@index([status], map: "idx_courses_status")
+  @@index([title(ops: raw("gin_trgm_ops"))], map: "idx_courses_title_trgm", type: Gin)
+}
+
+model enrollments {
+  id           BigInt            @id @default(autoincrement())
+  user_id      BigInt
+  course_id    BigInt
+  payment_id   BigInt?
+  status       enrollment_status @default(active)
+  purchased_at DateTime          @default(now()) @db.Timestamptz(6)
+  expires_at   DateTime?         @db.Timestamptz(6)
+  courses      courses           @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  payments     payments?         @relation(fields: [payment_id], references: [id], onUpdate: NoAction)
+  users        users             @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, course_id])
+  @@index([course_id], map: "idx_enrollments_course")
+  @@index([user_id], map: "idx_enrollments_user")
+}
+
+model events {
+  id          BigInt   @id @default(autoincrement())
+  user_id     BigInt?
+  type        String   @db.VarChar(40)
+  ref_table   String?  @db.VarChar(30)
+  ref_id      BigInt?
+  props       Json     @default("{}")
+  occurred_at DateTime @default(now()) @db.Timestamptz(6)
+  users       users?   @relation(fields: [user_id], references: [id], onUpdate: NoAction)
+
+  @@index([type, occurred_at], map: "idx_events_type_time")
+  @@index([user_id], map: "idx_events_user")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model lectures {
+  id                   BigInt        @id @default(autoincrement())
+  section_id           BigInt
+  title                String        @db.VarChar(200)
+  video_uid            String?       @db.VarChar(128)
+  duration             Int           @default(0)
+  order_no             Int           @default(0)
+  is_preview           Boolean       @default(false)
+  require_full_watch   Boolean       @default(false)
+  completion_threshold Int           @default(90) @db.SmallInt
+  disable_seek         Boolean       @default(false)
+  created_at           DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime      @default(now()) @db.Timestamptz(6)
+  attachments          attachments[]
+  bookmarks            bookmarks[]
+  sections             sections      @relation(fields: [section_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  progress             progress[]
+  qna                  qna[]
+  quizzes              quizzes[]
+
+  @@unique([section_id, order_no])
+  @@index([section_id], map: "idx_lectures_section")
+}
+
+model notifications {
+  id         BigInt   @id @default(autoincrement())
+  user_id    BigInt
+  type       String   @db.VarChar(30)
+  title      String   @db.VarChar(200)
+  body       String?
+  link       String?
+  is_read    Boolean  @default(false)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model offers {
+  id         BigInt       @id @default(autoincrement())
+  course_id  BigInt?
+  name       String       @db.VarChar(120)
+  price      Int
+  seat_limit Int
+  seat_taken Int          @default(0)
+  status     offer_status @default(open)
+  starts_at  DateTime?    @db.Timestamptz(6)
+  ends_at    DateTime?    @db.Timestamptz(6)
+  created_at DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at DateTime     @default(now()) @db.Timestamptz(6)
+  courses    courses?     @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  payments   payments[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model payments {
+  id                 BigInt               @id @default(autoincrement())
+  user_id            BigInt
+  course_id          BigInt?
+  subscription_id    BigInt?
+  coupon_id          BigInt?
+  amount             Int
+  pg_provider        String               @default("toss") @db.VarChar(30)
+  pg_tid             String?              @db.VarChar(128)
+  status             payment_status       @default(pending)
+  refund_amount      Int                  @default(0)
+  paid_at            DateTime?            @db.Timestamptz(6)
+  refunded_at        DateTime?            @db.Timestamptz(6)
+  created_at         DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime             @default(now()) @db.Timestamptz(6)
+  offer_id           BigInt?
+  coupon_redemptions coupon_redemptions[]
+  enrollments        enrollments[]
+  coupons            coupons?             @relation(fields: [coupon_id], references: [id], onUpdate: NoAction)
+  courses            courses?             @relation(fields: [course_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  offers             offers?              @relation(fields: [offer_id], references: [id], onUpdate: NoAction)
+  subscriptions      subscriptions?       @relation(fields: [subscription_id], references: [id], onUpdate: NoAction)
+  users              users                @relation(fields: [user_id], references: [id], onUpdate: NoAction)
+  receipts           receipts[]
+  referrals          referrals[]
+  refunds            refunds[]
+
+  @@unique([pg_provider, pg_tid])
+  @@index([offer_id], map: "idx_payments_offer")
+  @@index([status], map: "idx_payments_status")
+  @@index([subscription_id], map: "idx_payments_subscription")
+  @@index([user_id], map: "idx_payments_user")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model plans {
+  id             BigInt           @id @default(autoincrement())
+  code           String           @unique @db.VarChar(40)
+  name           String           @db.VarChar(120)
+  price          Int
+  billing_period billing_interval
+  period_count   Int              @default(1) @db.SmallInt
+  trial_days     Int              @default(0)
+  is_active      Boolean          @default(true)
+  created_at     DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime         @default(now()) @db.Timestamptz(6)
+  subscriptions  subscriptions[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model progress {
+  id                BigInt    @id @default(autoincrement())
+  user_id           BigInt
+  lecture_id        BigInt
+  watched_seconds   Int       @default(0)
+  last_position     Int       @default(0)
+  covered_seconds   Int       @default(0)
+  watched_intervals Json      @default("[]")
+  max_position      Int       @default(0)
+  completed         Boolean   @default(false)
+  completed_at      DateTime? @db.Timestamptz(6)
+  updated_at        DateTime  @default(now()) @db.Timestamptz(6)
+  lectures          lectures  @relation(fields: [lecture_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users             users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, lecture_id])
+  @@index([user_id], map: "idx_progress_user")
+}
+
+model qna {
+  id          BigInt    @id @default(autoincrement())
+  user_id     BigInt
+  course_id   BigInt
+  lecture_id  BigInt?
+  parent_id   BigInt?
+  title       String?   @db.VarChar(200)
+  content     String
+  is_answered Boolean   @default(false)
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime  @default(now()) @db.Timestamptz(6)
+  courses     courses   @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  lectures    lectures? @relation(fields: [lecture_id], references: [id], onUpdate: NoAction)
+  qna         qna?      @relation("qnaToqna", fields: [parent_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  other_qna   qna[]     @relation("qnaToqna")
+  users       users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([course_id], map: "idx_qna_course")
+  @@index([parent_id], map: "idx_qna_parent")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model quiz_attempts {
+  id           BigInt   @id @default(autoincrement())
+  user_id      BigInt
+  quiz_id      BigInt
+  selected     Json
+  is_correct   Boolean
+  score        Int      @default(0) @db.SmallInt
+  attempted_at DateTime @default(now()) @db.Timestamptz(6)
+  quizzes      quizzes  @relation(fields: [quiz_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users        users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([quiz_id], map: "idx_quiz_attempts_quiz")
+  @@index([user_id], map: "idx_quiz_attempts_user")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model quizzes {
+  id              BigInt          @id @default(autoincrement())
+  lecture_id      BigInt
+  quiz_type       quiz_type       @default(inline)
+  position_sec    Int?
+  question        String
+  options         Json
+  answer          Json
+  require_correct Boolean         @default(true)
+  points          Int             @default(0) @db.SmallInt
+  order_no        Int             @default(0)
+  created_at      DateTime        @default(now()) @db.Timestamptz(6)
+  quiz_attempts   quiz_attempts[]
+  lectures        lectures        @relation(fields: [lecture_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([lecture_id], map: "idx_quizzes_lecture")
+}
+
+model receipts {
+  id           BigInt         @id @default(autoincrement())
+  payment_id   BigInt
+  receipt_type receipt_type
+  identifier   String         @db.VarChar(50)
+  receipt_no   String?        @db.VarChar(64)
+  status       receipt_status @default(requested)
+  issued_at    DateTime?      @db.Timestamptz(6)
+  created_at   DateTime       @default(now()) @db.Timestamptz(6)
+  payments     payments       @relation(fields: [payment_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([payment_id], map: "idx_receipts_payment")
+}
+
+model referral_codes {
+  id         BigInt      @id @default(autoincrement())
+  user_id    BigInt      @unique
+  code       String      @unique @db.VarChar(40)
+  is_active  Boolean     @default(true)
+  created_at DateTime    @default(now()) @db.Timestamptz(6)
+  users      users       @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  referrals  referrals[]
+}
+
+model referrals {
+  id                                      BigInt          @id @default(autoincrement())
+  code_id                                 BigInt
+  referrer_user_id                        BigInt
+  referred_user_id                        BigInt?         @unique
+  status                                  referral_status @default(pending)
+  converted_payment_id                    BigInt?
+  created_at                              DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at                              DateTime        @default(now()) @db.Timestamptz(6)
+  referral_codes                          referral_codes  @relation(fields: [code_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  payments                                payments?       @relation(fields: [converted_payment_id], references: [id], onUpdate: NoAction)
+  users_referrals_referred_user_idTousers users?          @relation("referrals_referred_user_idTousers", fields: [referred_user_id], references: [id], onUpdate: NoAction)
+  users_referrals_referrer_user_idTousers users           @relation("referrals_referrer_user_idTousers", fields: [referrer_user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  rewards                                 rewards[]
+
+  @@index([referrer_user_id], map: "idx_referrals_referrer")
+  @@index([status], map: "idx_referrals_status")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model refunds {
+  id            BigInt        @id @default(autoincrement())
+  payment_id    BigInt
+  user_id       BigInt
+  reason        String?
+  progress_rate Int           @default(0) @db.SmallInt
+  refund_amount Int
+  status        refund_status @default(requested)
+  requested_at  DateTime      @default(now()) @db.Timestamptz(6)
+  processed_at  DateTime?     @db.Timestamptz(6)
+  payments      payments      @relation(fields: [payment_id], references: [id], onUpdate: NoAction)
+  users         users         @relation(fields: [user_id], references: [id], onUpdate: NoAction)
+
+  @@index([payment_id], map: "idx_refunds_payment")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model reviews {
+  id         BigInt   @id @default(autoincrement())
+  user_id    BigInt
+  course_id  BigInt
+  rating     Int      @db.SmallInt
+  comment    String?
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @db.Timestamptz(6)
+  courses    courses  @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, course_id])
+  @@index([course_id], map: "idx_reviews_course")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model rewards {
+  id          BigInt        @id @default(autoincrement())
+  user_id     BigInt
+  referral_id BigInt?
+  kind        reward_kind
+  status      reward_status @default(pending)
+  amount      Int?
+  note        String?       @db.VarChar(200)
+  granted_at  DateTime?     @db.Timestamptz(6)
+  redeemed_at DateTime?     @db.Timestamptz(6)
+  created_at  DateTime      @default(now()) @db.Timestamptz(6)
+  referrals   referrals?    @relation(fields: [referral_id], references: [id], onUpdate: NoAction)
+  users       users         @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model sections {
+  id        BigInt     @id @default(autoincrement())
+  course_id BigInt
+  title     String     @db.VarChar(200)
+  order_no  Int        @default(0)
+  lectures  lectures[]
+  courses   courses    @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([course_id, order_no])
+  @@index([course_id], map: "idx_sections_course")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model subscriptions {
+  id                   BigInt              @id @default(autoincrement())
+  user_id              BigInt
+  plan_id              BigInt
+  status               subscription_status @default(active)
+  source               subscription_source @default(paid)
+  billing_key          String?             @db.VarChar(255)
+  current_period_start DateTime            @default(now()) @db.Timestamptz(6)
+  current_period_end   DateTime            @db.Timestamptz(6)
+  cancel_at_period_end Boolean             @default(false)
+  cancelled_at         DateTime?           @db.Timestamptz(6)
+  created_at           DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime            @default(now()) @db.Timestamptz(6)
+  payments             payments[]
+  plans                plans               @relation(fields: [plan_id], references: [id], onUpdate: NoAction)
+  users                users               @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([user_id], map: "idx_subscriptions_user")
+}
+
+model user_sessions {
+  id           BigInt   @id @default(autoincrement())
+  user_id      BigInt
+  refresh_hash String   @db.VarChar(255)
+  device       String?  @db.VarChar(200)
+  ip           String?  @db.VarChar(64)
+  last_seen_at DateTime @default(now()) @db.Timestamptz(6)
+  created_at   DateTime @default(now()) @db.Timestamptz(6)
+  expires_at   DateTime @db.Timestamptz(6)
+  users        users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([user_id], map: "idx_user_sessions_user")
+}
+
+model users {
+  id                                          BigInt               @id @default(autoincrement())
+  email                                       String               @unique @db.Citext
+  password                                    String?              @db.VarChar(255)
+  name                                        String               @db.VarChar(100)
+  role                                        user_role            @default(student)
+  kakao_id                                    String?              @db.VarChar(64)
+  profile_image                               String?
+  created_at                                  DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at                                  DateTime             @default(now()) @db.Timestamptz(6)
+  bookmarks                                   bookmarks[]
+  certificates                                certificates[]
+  cohort_members                              cohort_members[]
+  coupon_redemptions                          coupon_redemptions[]
+  courses                                     courses[]
+  enrollments                                 enrollments[]
+  events                                      events[]
+  notifications                               notifications[]
+  payments                                    payments[]
+  progress                                    progress[]
+  qna                                         qna[]
+  quiz_attempts                               quiz_attempts[]
+  referral_codes                              referral_codes?
+  referrals_referrals_referred_user_idTousers referrals?           @relation("referrals_referred_user_idTousers")
+  referrals_referrals_referrer_user_idTousers referrals[]          @relation("referrals_referrer_user_idTousers")
+  refunds                                     refunds[]
+  reviews                                     reviews[]
+  rewards                                     rewards[]
+  subscriptions                               subscriptions[]
+  user_sessions                               user_sessions[]
+}
+
+enum billing_interval {
+  month
+  year
+}
+
+enum cohort_status {
+  active
+  completed
+  archived
+}
+
+enum course_status {
+  draft
+  published
+  closed
+}
+
+enum discount_type {
+  percent
+  fixed
+}
+
+enum enrollment_status {
+  active
+  expired
+  cancelled
+}
+
+enum offer_status {
+  open
+  sold_out
+  closed
+}
+
+enum payment_status {
+  pending
+  paid
+  failed
+  refunded
+  partially_refunded
+}
+
+enum quiz_type {
+  inline
+  final
+}
+
+enum receipt_status {
+  requested
+  issued
+  failed
+  cancelled
+}
+
+enum receipt_type {
+  cash_receipt
+  tax_invoice
+}
+
+enum referral_status {
+  pending
+  signed_up
+  activated
+  converted
+  rewarded
+}
+
+enum refund_status {
+  requested
+  approved
+  rejected
+  completed
+}
+
+enum reward_kind {
+  sub_extension
+  discount
+}
+
+enum reward_status {
+  pending
+  granted
+  redeemed
+  revoked
+}
+
+enum subscription_source {
+  paid
+  seed
+  comp
+}
+
+enum subscription_status {
+  active
+  past_due
+  cancelled
+  expired
+  paused
+}
+
+enum user_role {
+  student
+  instructor
+  admin
+}
