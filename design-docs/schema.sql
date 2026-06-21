@@ -34,6 +34,10 @@ CREATE TYPE quiz_type          AS ENUM ('inline', 'final');  -- inline: 영상 �
 CREATE TYPE refund_status      AS ENUM ('requested', 'approved', 'rejected', 'completed');
 CREATE TYPE receipt_type       AS ENUM ('cash_receipt', 'tax_invoice');  -- 현금영수증 / 세금계산서
 CREATE TYPE receipt_status     AS ENUM ('requested', 'issued', 'failed', 'cancelled');
+-- 멤버십(구독) 관련 (ADR 0008)
+CREATE TYPE billing_interval     AS ENUM ('month', 'year');                         -- 멤버십 청구 주기
+CREATE TYPE subscription_status  AS ENUM ('active', 'past_due', 'cancelled', 'expired', 'paused');
+CREATE TYPE subscription_source  AS ENUM ('paid', 'seed', 'comp');                  -- paid=유료결제 / seed=0006 60명 시딩 / comp=무상제공
 
 -- ----------------------------------------------------------------
 -- 1) users
@@ -168,12 +172,58 @@ CREATE TABLE coupons (
 );
 
 -- ----------------------------------------------------------------
--- 8) payments
+-- 7-1) plans (멤버십 요금제 정의 — ADR 0008)
+--   * 단건(코스 1개) 구매가는 courses.price 사용. plans 는 "구독형 멤버십"만 정의.
+--   * 가격은 ADR 0005(🟡 잠정): 월 19,900 / 연 179,000. 확정 시 데이터만 갱신.
+-- ----------------------------------------------------------------
+CREATE TABLE plans (
+  id             BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  code           VARCHAR(40)      NOT NULL UNIQUE,             -- 'membership_monthly' / 'membership_annual'
+  name           VARCHAR(120)     NOT NULL,                    -- '멤버십 월간'
+  price          INTEGER          NOT NULL CHECK (price >= 0), -- KRW 정수(원)
+  billing_period billing_interval NOT NULL,                    -- month / year
+  period_count   SMALLINT         NOT NULL DEFAULT 1 CHECK (period_count > 0), -- 1 = 매월/매년
+  trial_days     INTEGER          NOT NULL DEFAULT 0 CHECK (trial_days >= 0),  -- 무료체험 일수(0=없음)
+  is_active      BOOLEAN          NOT NULL DEFAULT true,       -- 판매중단 시 false (기존 구독은 유지)
+  created_at     TIMESTAMPTZ      NOT NULL DEFAULT now(),
+  updated_at     TIMESTAMPTZ      NOT NULL DEFAULT now()
+);
+
+-- ----------------------------------------------------------------
+-- 7-2) subscriptions (구독 상태 — 멤버십 접근 판정의 원천, ADR 0008)
+--   * 접근 판정: enrollments(단건) OR (subscription active & current_period_end > now())
+--     멤버십 = 전체 published 코스 접근. 등급제(일부 코스)는 후속 plan_courses 매핑으로 확장.
+--   * 자동결제: 토스 billing_key 보관, 주기 갱신 배치가 billing_key 로 재청구 → payments row 생성.
+--   * 0006 시딩: source='seed', billing_key NULL, current_period_end = 가입+3개월.
+-- ----------------------------------------------------------------
+CREATE TABLE subscriptions (
+  id                   BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  user_id              BIGINT              NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  plan_id              BIGINT              NOT NULL REFERENCES plans(id) ON DELETE RESTRICT,
+  status               subscription_status NOT NULL DEFAULT 'active',
+  source               subscription_source NOT NULL DEFAULT 'paid',
+  billing_key          VARCHAR(255),                            -- 토스 빌링키(자동결제 토큰). 시드/무상은 NULL
+  current_period_start TIMESTAMPTZ         NOT NULL DEFAULT now(),
+  current_period_end   TIMESTAMPTZ         NOT NULL,            -- 이 시점까지 접근 허용
+  cancel_at_period_end BOOLEAN             NOT NULL DEFAULT false, -- 해지 예약(기간말 종료, 즉시 차단 아님)
+  cancelled_at         TIMESTAMPTZ,
+  created_at           TIMESTAMPTZ         NOT NULL DEFAULT now(),
+  updated_at           TIMESTAMPTZ         NOT NULL DEFAULT now(),
+  CHECK (current_period_end > current_period_start)
+);
+-- 1유저당 동시 활성 구독 1개만 (중복 구독 방지)
+CREATE UNIQUE INDEX uq_subscriptions_active_user ON subscriptions (user_id) WHERE status = 'active';
+
+-- ----------------------------------------------------------------
+-- 8) payments (단건·구독 통합 결제 원장 — ADR 0008로 구독 지원 확장)
+--   * 단건: course_id 채움 / 구독: subscription_id 채움. 둘 중 하나는 반드시 존재(CHECK).
+--   * 구독 자동결제 1회분마다 payments row 1개(주기 청구 이력).
 -- ----------------------------------------------------------------
 CREATE TABLE payments (
   id             BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   user_id        BIGINT         NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
-  course_id      BIGINT         NOT NULL REFERENCES courses(id) ON DELETE RESTRICT,
+  course_id      BIGINT         REFERENCES courses(id) ON DELETE RESTRICT,        -- 단건 구매 대상(구독 결제면 NULL)
+  subscription_id BIGINT        REFERENCES subscriptions(id) ON DELETE SET NULL,  -- 구독 청구 1회분(단건이면 NULL)
   coupon_id      BIGINT         REFERENCES coupons(id) ON DELETE SET NULL,
   amount         INTEGER        NOT NULL CHECK (amount >= 0),  -- 실제 결제 금액(할인 후)
   pg_provider    VARCHAR(30)    NOT NULL DEFAULT 'toss',       -- toss / portone ...
@@ -184,7 +234,8 @@ CREATE TABLE payments (
   refunded_at    TIMESTAMPTZ,
   created_at     TIMESTAMPTZ    NOT NULL DEFAULT now(),
   updated_at     TIMESTAMPTZ    NOT NULL DEFAULT now(),
-  UNIQUE (pg_provider, pg_tid)
+  UNIQUE (pg_provider, pg_tid),
+  CHECK (course_id IS NOT NULL OR subscription_id IS NOT NULL)  -- 단건 또는 구독, 둘 중 하나는 필수
 );
 
 -- ----------------------------------------------------------------
@@ -372,6 +423,9 @@ CREATE INDEX idx_quiz_attempts_quiz    ON quiz_attempts (quiz_id);
 CREATE INDEX idx_enrollments_user      ON enrollments (user_id);
 CREATE INDEX idx_enrollments_course    ON enrollments (course_id);
 CREATE INDEX idx_enrollments_expiry    ON enrollments (expires_at) WHERE status = 'active'; -- 만료 배치
+CREATE INDEX idx_subscriptions_user    ON subscriptions (user_id);
+CREATE INDEX idx_subscriptions_renew   ON subscriptions (current_period_end) WHERE status = 'active'; -- 갱신/만료 배치
+CREATE INDEX idx_payments_subscription ON payments (subscription_id);
 CREATE INDEX idx_progress_user         ON progress (user_id);
 CREATE INDEX idx_bookmarks_user_lec    ON bookmarks (user_id, lecture_id);
 CREATE INDEX idx_payments_user         ON payments (user_id);
@@ -393,6 +447,8 @@ CREATE TRIGGER trg_users_updated     BEFORE UPDATE ON users     FOR EACH ROW EXE
 CREATE TRIGGER trg_courses_updated    BEFORE UPDATE ON courses   FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 CREATE TRIGGER trg_lectures_updated   BEFORE UPDATE ON lectures  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 CREATE TRIGGER trg_payments_updated   BEFORE UPDATE ON payments  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+CREATE TRIGGER trg_plans_updated         BEFORE UPDATE ON plans         FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+CREATE TRIGGER trg_subscriptions_updated BEFORE UPDATE ON subscriptions FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 CREATE TRIGGER trg_progress_updated   BEFORE UPDATE ON progress  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 CREATE TRIGGER trg_reviews_updated    BEFORE UPDATE ON reviews   FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 CREATE TRIGGER trg_qna_updated        BEFORE UPDATE ON qna       FOR EACH ROW EXECUTE FUNCTION set_updated_at();
@@ -416,4 +472,15 @@ COMMIT;
 --      총 수강시간의 1/3 경과 전 → 2/3 환급, 1/2 경과 전 → 1/2 환급, 1/2 경과 후 → 환급 없음.
 --      progress_rate 로 구간 판정 후 refund_amount 산출. (정확한 비율은 운영정책/약관에 명시)
 --  * 동시접속 제한: user_sessions 활성 행 수가 한도(예 2) 초과 시 가장 오래된 세션 폐기.
+--  * [멤버십/구독 — ADR 0008]
+--    - 강의 접근 판정(앱 레벨): 단건 OR 구독 두 경로를 합쳐 판정.
+--        canAccess(user, course) =
+--          EXISTS enrollment(user, course, status='active', expires_at IS NULL OR > now())
+--          OR EXISTS subscription(user, status='active', current_period_end > now())   -- 멤버십=전체 published 코스
+--    - 자동결제: 결제 시 토스 빌링키 발급 → subscriptions.billing_key 저장.
+--        갱신 배치: current_period_end 임박 active 구독을 billing_key 로 재청구 →
+--        성공 시 payments row 생성 + current_period_*  +1주기, 실패 시 status='past_due'(유예 후 expired).
+--    - 해지: cancel_at_period_end=true 로 예약(기간말 종료, 잔여기간은 접근 유지). 즉시환불은 단건 비례환불과 별도 정책.
+--    - 만료 배치: current_period_end < now() AND status IN('active','past_due') → status='expired'.
+--    - 등급제(특정 코스만 멤버십) 필요 시: plan_courses(plan_id, course_id) 매핑 테이블 추가로 확장.
 -- ================================================================

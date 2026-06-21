@@ -39,6 +39,10 @@ erDiagram
     payments ||--o| enrollments : "수강권부여"
     payments ||--o| coupon_redemptions : "쿠폰적용"
 
+    users ||--o{ subscriptions : "구독"
+    plans ||--o{ subscriptions : "요금제"
+    subscriptions ||--o{ payments : "구독청구"
+
     coupons ||--o{ payments : "할인"
     coupons ||--o{ coupon_redemptions : "사용이력"
 
@@ -184,10 +188,35 @@ erDiagram
         timestamptz valid_until
     }
 
+    plans {
+        bigint id PK
+        varchar code UK "membership_monthly|annual"
+        varchar name
+        int price "KRW(0005 잠정)"
+        enum billing_period "month|year"
+        smallint period_count
+        int trial_days
+        bool is_active
+    }
+
+    subscriptions {
+        bigint id PK
+        bigint user_id FK
+        bigint plan_id FK
+        enum status "active|past_due|cancelled|expired|paused"
+        enum source "paid|seed|comp"
+        varchar billing_key "토스 빌링키(nullable)"
+        timestamptz current_period_start
+        timestamptz current_period_end "접근 만료"
+        bool cancel_at_period_end
+        timestamptz cancelled_at
+    }
+
     payments {
         bigint id PK
         bigint user_id FK
-        bigint course_id FK
+        bigint course_id FK "단건(nullable)"
+        bigint subscription_id FK "구독(nullable)"
         bigint coupon_id FK
         int amount "할인후"
         varchar pg_provider
