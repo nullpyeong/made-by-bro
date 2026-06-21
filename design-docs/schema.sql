@@ -562,6 +562,310 @@ CREATE TRIGGER trg_qna_updated        BEFORE UPDATE ON qna       FOR EACH ROW EX
 CREATE TRIGGER trg_offers_updated     BEFORE UPDATE ON offers    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 CREATE TRIGGER trg_referrals_updated  BEFORE UPDATE ON referrals FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
+-- ================================================================
+-- 객체 설명 (COMMENT ON) — DB 카탈로그(pg_description)에 직접 기록
+--   * psql \d+, pg_catalog, Prisma db pull(/// 주석)로 노출되어 스키마가 자기설명적이 됨.
+--   * PostgreSQL은 enum '값' 단위 코멘트를 지원하지 않아, 값 의미는 타입 코멘트에 함께 기술.
+--   * 공통 컬럼 규약(개별 코멘트 생략): id=기본키(BIGINT IDENTITY) /
+--     created_at=생성 시각 / updated_at=수정 시각(set_updated_at 트리거 자동 갱신).
+-- ================================================================
+
+-- ENUM 타입 -------------------------------------------------------
+COMMENT ON TYPE user_role           IS '사용자 권한: student=수강생 / instructor=강사 / admin=관리자';
+COMMENT ON TYPE course_status       IS '코스 공개 상태: draft=작성중(비공개) / published=공개판매 / closed=판매종료';
+COMMENT ON TYPE enrollment_status   IS '수강권 상태: active=수강중 / expired=기간만료 / cancelled=취소(환불 등)';
+COMMENT ON TYPE payment_status      IS '결제 상태: pending=대기 / paid=완료 / failed=실패 / refunded=전액환불 / partially_refunded=부분환불';
+COMMENT ON TYPE discount_type       IS '쿠폰 할인 방식: percent=정률(%) / fixed=정액(원)';
+COMMENT ON TYPE quiz_type           IS '퀴즈 유형: inline=영상 중간 게이팅 / final=영상 종료 후 채점';
+COMMENT ON TYPE refund_status       IS '환불 처리 상태: requested=요청 / approved=승인 / rejected=거부 / completed=완료';
+COMMENT ON TYPE receipt_type        IS '증빙 유형: cash_receipt=현금영수증 / tax_invoice=세금계산서';
+COMMENT ON TYPE receipt_status      IS '증빙 발급 상태: requested=요청 / issued=발급 / failed=실패 / cancelled=취소';
+COMMENT ON TYPE billing_interval    IS '멤버십 청구 주기: month=월 / year=연 (ADR 0008)';
+COMMENT ON TYPE subscription_status IS '구독 상태: active=유효 / past_due=결제실패 유예 / cancelled=해지예약·해지 / expired=만료 / paused=일시정지 (ADR 0008)';
+COMMENT ON TYPE subscription_source IS '구독 발생 출처: paid=유료결제 / seed=ADR0006 60명 시딩 / comp=무상제공';
+COMMENT ON TYPE offer_status        IS '선착순 한정 오퍼 상태: open=판매중 / sold_out=만석 / closed=종료 (ADR 0006)';
+COMMENT ON TYPE cohort_status       IS '시딩 코호트 상태: active=진행중 / completed=완료 / archived=보관 (ADR 0006)';
+COMMENT ON TYPE referral_status     IS '추천 단계: pending=대기 / signed_up=가입 / activated=활성화(첫 강의 수강) / converted=유료전환 / rewarded=보상지급 (ADR 0006)';
+COMMENT ON TYPE reward_kind         IS '추천 보상 종류(비현금만, ADR 0006): sub_extension=무료기간 연장 / discount=할인';
+COMMENT ON TYPE reward_status       IS '보상 상태: pending=대기 / granted=지급 / redeemed=사용 / revoked=회수';
+
+-- 공통 함수 -------------------------------------------------------
+COMMENT ON FUNCTION set_updated_at() IS 'BEFORE UPDATE 트리거 함수: NEW.updated_at 을 now()로 자동 갱신';
+
+-- users -----------------------------------------------------------
+COMMENT ON TABLE  users               IS '사용자 계정(수강생/강사/관리자). 이메일 또는 카카오 OAuth 로그인';
+COMMENT ON COLUMN users.email         IS '로그인 이메일. CITEXT라 대소문자 무시 UNIQUE';
+COMMENT ON COLUMN users.password      IS 'bcrypt/argon2 해시. 카카오 전용 계정은 NULL';
+COMMENT ON COLUMN users.name          IS '표시 이름';
+COMMENT ON COLUMN users.role          IS '권한(user_role)';
+COMMENT ON COLUMN users.kakao_id      IS '카카오 OAuth 식별자(소셜 가입 시)';
+COMMENT ON COLUMN users.profile_image IS '프로필 이미지 URL';
+
+-- categories ------------------------------------------------------
+COMMENT ON TABLE  categories      IS '코스 분류(카테고리)';
+COMMENT ON COLUMN categories.name IS '분류명';
+COMMENT ON COLUMN categories.slug IS 'URL 슬러그(UNIQUE)';
+
+-- courses ---------------------------------------------------------
+COMMENT ON TABLE  courses               IS '강의(코스). Course → Section → Lecture 계층의 최상위';
+COMMENT ON COLUMN courses.category_id   IS '분류(FK). 분류 삭제 시 NULL';
+COMMENT ON COLUMN courses.instructor_id IS '담당 강사(FK users). 강사 삭제 시 NULL';
+COMMENT ON COLUMN courses.title         IS '코스 제목';
+COMMENT ON COLUMN courses.description   IS '코스 소개';
+COMMENT ON COLUMN courses.thumbnail_url IS '썸네일 이미지 URL';
+COMMENT ON COLUMN courses.price         IS '단건 구매가(KRW 정수, 원). 0=무료';
+COMMENT ON COLUMN courses.status        IS '공개 상태(course_status)';
+
+-- sections --------------------------------------------------------
+COMMENT ON TABLE  sections          IS '코스 내 섹션(챕터). 코스 삭제 시 CASCADE';
+COMMENT ON COLUMN sections.course_id IS '소속 코스(FK)';
+COMMENT ON COLUMN sections.title     IS '섹션 제목';
+COMMENT ON COLUMN sections.order_no  IS '코스 내 정렬 순서(코스별 UNIQUE)';
+
+-- lectures --------------------------------------------------------
+COMMENT ON TABLE  lectures                      IS '개별 강의(영상). 섹션 삭제 시 CASCADE';
+COMMENT ON COLUMN lectures.section_id           IS '소속 섹션(FK)';
+COMMENT ON COLUMN lectures.title                IS '강의 제목';
+COMMENT ON COLUMN lectures.video_uid            IS 'Cloudflare Stream/Mux 자산 UID. 외부 URL 직접 미노출, 재생 시 Signed URL 발급';
+COMMENT ON COLUMN lectures.duration             IS '영상 길이(초)';
+COMMENT ON COLUMN lectures.order_no             IS '섹션 내 정렬 순서(섹션별 UNIQUE)';
+COMMENT ON COLUMN lectures.is_preview           IS '미리보기(무료 공개) 강의 여부';
+COMMENT ON COLUMN lectures.require_full_watch   IS '완청 필수 여부(강사 설정)';
+COMMENT ON COLUMN lectures.completion_threshold IS '완청 인정 비율(%). covered_seconds/duration 이 이상이면 완료';
+COMMENT ON COLUMN lectures.disable_seek         IS '최초 수강 시 빨리감기 금지(복습 시 해제)';
+
+-- attachments -----------------------------------------------------
+COMMENT ON TABLE  attachments            IS '강의 첨부자료(PDF 등). 다운로드는 Signed URL 발급';
+COMMENT ON COLUMN attachments.lecture_id IS '소속 강의(FK)';
+COMMENT ON COLUMN attachments.file_url   IS 'S3 객체키(직접 노출 금지)';
+COMMENT ON COLUMN attachments.filename   IS '원본 파일명';
+COMMENT ON COLUMN attachments.size_bytes IS '파일 크기(byte)';
+
+-- quizzes ---------------------------------------------------------
+COMMENT ON TABLE  quizzes                 IS '퀴즈: inline=영상 중간 게이팅 / final=종료 후 채점';
+COMMENT ON COLUMN quizzes.lecture_id      IS '소속 강의(FK)';
+COMMENT ON COLUMN quizzes.quiz_type       IS '유형(quiz_type)';
+COMMENT ON COLUMN quizzes.position_sec    IS 'inline 게이팅 시점(초). final 은 NULL';
+COMMENT ON COLUMN quizzes.question        IS '문제 본문';
+COMMENT ON COLUMN quizzes.options         IS '보기 목록 JSONB: ["보기1","보기2",...]';
+COMMENT ON COLUMN quizzes.answer          IS '정답 인덱스/값 JSONB(단일·복수 지원)';
+COMMENT ON COLUMN quizzes.require_correct IS 'inline: 정답이어야 영상 진행';
+COMMENT ON COLUMN quizzes.points          IS 'final 채점 배점';
+COMMENT ON COLUMN quizzes.order_no        IS '정렬 순서';
+
+-- quiz_attempts ---------------------------------------------------
+COMMENT ON TABLE  quiz_attempts            IS '퀴즈 응답/채점 이력';
+COMMENT ON COLUMN quiz_attempts.user_id    IS '응답자(FK users)';
+COMMENT ON COLUMN quiz_attempts.quiz_id    IS '대상 퀴즈(FK)';
+COMMENT ON COLUMN quiz_attempts.selected   IS '제출한 답 JSONB';
+COMMENT ON COLUMN quiz_attempts.is_correct IS '정답 여부';
+COMMENT ON COLUMN quiz_attempts.score      IS '획득 점수(final)';
+
+-- coupons ---------------------------------------------------------
+COMMENT ON TABLE  coupons                IS '할인 쿠폰';
+COMMENT ON COLUMN coupons.code           IS '쿠폰 코드(UNIQUE)';
+COMMENT ON COLUMN coupons.discount_type  IS '할인 방식(discount_type)';
+COMMENT ON COLUMN coupons.discount_value IS 'percent: 1~100 / fixed: KRW(원)';
+COMMENT ON COLUMN coupons.min_amount     IS '최소 결제 금액(원)';
+COMMENT ON COLUMN coupons.max_uses       IS '총 사용 한도. NULL=무제한';
+COMMENT ON COLUMN coupons.used_count     IS '누적 사용 횟수';
+COMMENT ON COLUMN coupons.valid_until    IS '유효 만료 시각. NULL=무기한';
+
+-- plans -----------------------------------------------------------
+COMMENT ON TABLE  plans                IS '멤버십(구독) 요금제 정의. 단건가는 courses.price 사용 (ADR 0008)';
+COMMENT ON COLUMN plans.code           IS '플랜 코드(UNIQUE): membership_monthly / membership_annual';
+COMMENT ON COLUMN plans.name           IS '플랜 표시명';
+COMMENT ON COLUMN plans.price          IS '구독료(KRW 정수, 원). 가격은 ADR 0005 잠정(월19,900/연179,000)';
+COMMENT ON COLUMN plans.billing_period IS '청구 주기(billing_interval)';
+COMMENT ON COLUMN plans.period_count   IS '주기 배수(1=매월/매년)';
+COMMENT ON COLUMN plans.trial_days     IS '무료체험 일수(0=없음)';
+COMMENT ON COLUMN plans.is_active      IS '판매중 여부. false=판매중단(기존 구독은 유지)';
+
+-- subscriptions ---------------------------------------------------
+COMMENT ON TABLE  subscriptions                      IS '구독 상태 — 멤버십 접근 판정의 원천. 1유저 동시 활성 1개(부분 UNIQUE) (ADR 0008)';
+COMMENT ON COLUMN subscriptions.user_id              IS '구독자(FK users)';
+COMMENT ON COLUMN subscriptions.plan_id              IS '구독 플랜(FK plans). 플랜 삭제 RESTRICT';
+COMMENT ON COLUMN subscriptions.status               IS '구독 상태(subscription_status)';
+COMMENT ON COLUMN subscriptions.source               IS '발생 출처(subscription_source). seed=0006 시딩';
+COMMENT ON COLUMN subscriptions.billing_key          IS '토스 빌링키(자동결제 토큰). 시드/무상은 NULL';
+COMMENT ON COLUMN subscriptions.current_period_start IS '현재 청구주기 시작';
+COMMENT ON COLUMN subscriptions.current_period_end   IS '현재 주기 종료=이 시점까지 접근 허용. 갱신 배치 대상';
+COMMENT ON COLUMN subscriptions.cancel_at_period_end IS '해지 예약(기간말 종료, 즉시 차단 아님)';
+COMMENT ON COLUMN subscriptions.cancelled_at         IS '실제 해지 처리 시각';
+
+-- payments --------------------------------------------------------
+COMMENT ON TABLE  payments                 IS '단건·구독 통합 결제 원장. 단건=course_id / 구독=subscription_id, 둘 중 하나 필수(CHECK) (ADR 0008)';
+COMMENT ON COLUMN payments.user_id         IS '결제자(FK users). 삭제 RESTRICT';
+COMMENT ON COLUMN payments.course_id       IS '단건 구매 대상 코스. 구독 결제면 NULL';
+COMMENT ON COLUMN payments.subscription_id IS '구독 청구 1회분. 단건이면 NULL';
+COMMENT ON COLUMN payments.coupon_id       IS '적용 쿠폰(FK). 미사용 NULL';
+COMMENT ON COLUMN payments.amount          IS '실제 결제 금액(할인 후, 원)';
+COMMENT ON COLUMN payments.pg_provider     IS 'PG사: toss / portone ...';
+COMMENT ON COLUMN payments.pg_tid          IS 'PG 거래 고유키(멱등/환불 조회). (pg_provider,pg_tid) UNIQUE';
+COMMENT ON COLUMN payments.status          IS '결제 상태(payment_status)';
+COMMENT ON COLUMN payments.refund_amount   IS '누적 환불 금액(원)';
+COMMENT ON COLUMN payments.paid_at         IS '결제 완료 시각';
+COMMENT ON COLUMN payments.refunded_at     IS '환불 처리 시각';
+COMMENT ON COLUMN payments.offer_id        IS '결제에 적용된 한정 오퍼(FK offers, ADR 0006). 미적용 NULL';
+
+-- coupon_redemptions ----------------------------------------------
+COMMENT ON TABLE  coupon_redemptions            IS '쿠폰 사용 이력. (coupon_id,user_id) UNIQUE=1인 1회 중복사용 방지';
+COMMENT ON COLUMN coupon_redemptions.coupon_id  IS '사용 쿠폰(FK)';
+COMMENT ON COLUMN coupon_redemptions.user_id    IS '사용자(FK)';
+COMMENT ON COLUMN coupon_redemptions.payment_id IS '사용된 결제(FK)';
+
+-- enrollments -----------------------------------------------------
+COMMENT ON TABLE  enrollments              IS '수강권: 결제→권한 부여. (user_id,course_id) UNIQUE=중복 수강 방지';
+COMMENT ON COLUMN enrollments.user_id      IS '수강자(FK users)';
+COMMENT ON COLUMN enrollments.course_id    IS '대상 코스(FK)';
+COMMENT ON COLUMN enrollments.payment_id   IS '결제 출처(FK payments). 결제 삭제 시 NULL';
+COMMENT ON COLUMN enrollments.status       IS '수강권 상태(enrollment_status)';
+COMMENT ON COLUMN enrollments.purchased_at IS '수강권 취득 시각';
+COMMENT ON COLUMN enrollments.expires_at   IS '수강 만료 시각. NULL=무제한';
+
+-- progress --------------------------------------------------------
+COMMENT ON TABLE  progress                   IS '강의별 진도/이어보기/완청 검증. (user_id,lecture_id) UNIQUE';
+COMMENT ON COLUMN progress.user_id           IS '수강자(FK users)';
+COMMENT ON COLUMN progress.lecture_id        IS '대상 강의(FK)';
+COMMENT ON COLUMN progress.watched_seconds   IS '누적 시청 시간(초)';
+COMMENT ON COLUMN progress.last_position     IS '이어보기 지점(초)';
+COMMENT ON COLUMN progress.covered_seconds   IS '실제 재생된 고유 구간 합(초). 완청 판정 분자';
+COMMENT ON COLUMN progress.watched_intervals IS '재생 구간 JSONB [[start,end],...]. 스크럽 가짜완료 방지용 union';
+COMMENT ON COLUMN progress.max_position      IS '최대 시청 지점(초). 빨리감기 제한 기준';
+COMMENT ON COLUMN progress.completed         IS '완청 임계 도달 여부';
+COMMENT ON COLUMN progress.completed_at      IS '완청 시각';
+
+-- bookmarks -------------------------------------------------------
+COMMENT ON TABLE  bookmarks              IS '강의 내 북마크(시점 메모)';
+COMMENT ON COLUMN bookmarks.user_id      IS '소유자(FK users)';
+COMMENT ON COLUMN bookmarks.lecture_id   IS '대상 강의(FK)';
+COMMENT ON COLUMN bookmarks.position_sec IS '북마크 시점(초)';
+COMMENT ON COLUMN bookmarks.label        IS '메모 라벨';
+
+-- reviews ---------------------------------------------------------
+COMMENT ON TABLE  reviews           IS '수강평. (user_id,course_id) UNIQUE=1인 1코스 1리뷰';
+COMMENT ON COLUMN reviews.user_id   IS '작성자(FK users)';
+COMMENT ON COLUMN reviews.course_id IS '대상 코스(FK)';
+COMMENT ON COLUMN reviews.rating    IS '별점 1~5';
+COMMENT ON COLUMN reviews.comment   IS '후기 본문';
+
+-- qna -------------------------------------------------------------
+COMMENT ON TABLE  qna             IS '질문게시판. parent_id 로 질문-답글 트리';
+COMMENT ON COLUMN qna.user_id     IS '작성자(FK users)';
+COMMENT ON COLUMN qna.course_id   IS '대상 코스(FK)';
+COMMENT ON COLUMN qna.lecture_id  IS '특정 강의 관련 질문(optional)';
+COMMENT ON COLUMN qna.parent_id   IS 'NULL=질문 / 값=해당 질문의 답글';
+COMMENT ON COLUMN qna.title       IS '질문 제목';
+COMMENT ON COLUMN qna.content     IS '본문';
+COMMENT ON COLUMN qna.is_answered IS '답변 완료 여부';
+
+-- refunds ---------------------------------------------------------
+COMMENT ON TABLE  refunds               IS '수강률 기반 비례 환불(학원/평생교육법 의무)';
+COMMENT ON COLUMN refunds.payment_id    IS '환불 대상 결제(FK). 삭제 RESTRICT';
+COMMENT ON COLUMN refunds.user_id       IS '환불 요청자(FK users)';
+COMMENT ON COLUMN refunds.reason        IS '환불 사유';
+COMMENT ON COLUMN refunds.progress_rate IS '환불 산정 시 진도율(%)';
+COMMENT ON COLUMN refunds.refund_amount IS '법정 비례 환불액(원)';
+COMMENT ON COLUMN refunds.status        IS '처리 상태(refund_status)';
+COMMENT ON COLUMN refunds.requested_at  IS '환불 요청 시각';
+COMMENT ON COLUMN refunds.processed_at  IS '환불 처리 완료 시각';
+
+-- receipts --------------------------------------------------------
+COMMENT ON TABLE  receipts              IS '현금영수증/세금계산서(소득세법 발급)';
+COMMENT ON COLUMN receipts.payment_id   IS '대상 결제(FK)';
+COMMENT ON COLUMN receipts.receipt_type IS '증빙 유형(receipt_type)';
+COMMENT ON COLUMN receipts.identifier   IS '휴대폰번호(현금영수증)/사업자번호(세금계산서)';
+COMMENT ON COLUMN receipts.receipt_no   IS '발급 번호(국세청/PG)';
+COMMENT ON COLUMN receipts.status       IS '발급 상태(receipt_status)';
+COMMENT ON COLUMN receipts.issued_at    IS '발급 완료 시각';
+
+-- certificates ----------------------------------------------------
+COMMENT ON TABLE  certificates           IS '수료증. (user_id,course_id) UNIQUE=코스당 1회';
+COMMENT ON COLUMN certificates.user_id   IS '수료자(FK users)';
+COMMENT ON COLUMN certificates.course_id IS '대상 코스(FK)';
+COMMENT ON COLUMN certificates.cert_no   IS '수료번호(UNIQUE)';
+COMMENT ON COLUMN certificates.pdf_url   IS '발급 PDF URL(S3)';
+COMMENT ON COLUMN certificates.issued_at IS '발급 시각';
+
+-- user_sessions ---------------------------------------------------
+COMMENT ON TABLE  user_sessions              IS '로그인 세션(동시접속/기기 제한, 계정공유 방지)';
+COMMENT ON COLUMN user_sessions.user_id      IS '세션 소유자(FK users)';
+COMMENT ON COLUMN user_sessions.refresh_hash IS 'refresh token 해시(회전/폐기용)';
+COMMENT ON COLUMN user_sessions.device       IS 'UA/기기 식별 문자열';
+COMMENT ON COLUMN user_sessions.ip           IS '접속 IP';
+COMMENT ON COLUMN user_sessions.last_seen_at IS '마지막 활동 시각';
+COMMENT ON COLUMN user_sessions.expires_at   IS '세션 만료 시각';
+
+-- notifications ---------------------------------------------------
+COMMENT ON TABLE  notifications         IS '인앱 알림';
+COMMENT ON COLUMN notifications.user_id IS '수신자(FK users)';
+COMMENT ON COLUMN notifications.type    IS '알림 종류: payment/qna_answer/expiry/new_lecture/system';
+COMMENT ON COLUMN notifications.title   IS '알림 제목';
+COMMENT ON COLUMN notifications.body    IS '알림 본문';
+COMMENT ON COLUMN notifications.link    IS '클릭 이동 링크';
+COMMENT ON COLUMN notifications.is_read IS '읽음 여부';
+
+-- announcements ---------------------------------------------------
+COMMENT ON TABLE  announcements           IS '공지. course_id NULL=전체 공지 / 값=코스 공지';
+COMMENT ON COLUMN announcements.course_id IS '대상 코스(FK). NULL=전체';
+COMMENT ON COLUMN announcements.title     IS '공지 제목';
+COMMENT ON COLUMN announcements.content   IS '공지 본문';
+COMMENT ON COLUMN announcements.pinned    IS '상단 고정 여부';
+
+-- offers (ADR 0006) -----------------------------------------------
+COMMENT ON TABLE  offers            IS '선착순 한정 오퍼(얼리버드/기수제). 잔여석=seat_limit-seat_taken. course.html ''37/100'' 실데이터화 (ADR 0006)';
+COMMENT ON COLUMN offers.course_id  IS '대상 코스(FK). NULL=멤버십/전체 대상 오퍼';
+COMMENT ON COLUMN offers.name       IS '오퍼명(예: 얼리버드 1기)';
+COMMENT ON COLUMN offers.price      IS '얼리버드가(원)';
+COMMENT ON COLUMN offers.seat_limit IS '선착순 한도(예: 100)';
+COMMENT ON COLUMN offers.seat_taken IS '점유 좌석 수. 결제확정 트랜잭션서 +1(오버부킹 CHECK 차단)';
+COMMENT ON COLUMN offers.status     IS '오퍼 상태(offer_status). 만석→sold_out';
+COMMENT ON COLUMN offers.starts_at  IS '판매 시작 시각';
+COMMENT ON COLUMN offers.ends_at    IS '판매 종료 시각';
+
+-- cohorts / cohort_members (ADR 0006) -----------------------------
+COMMENT ON TABLE  cohorts                  IS '시딩 코호트(레벨·학년·기수별 순차 개방) (ADR 0006)';
+COMMENT ON COLUMN cohorts.name             IS '코호트명(예: 오프라인 시딩 1기(초등 고학년))';
+COMMENT ON COLUMN cohorts.status           IS '코호트 상태(cohort_status)';
+COMMENT ON COLUMN cohorts.notes            IS '운영 메모';
+COMMENT ON COLUMN cohorts.started_at       IS '개방 시작 시각';
+COMMENT ON TABLE  cohort_members           IS '코호트 소속 멤버. (cohort_id,user_id) UNIQUE. 60명 시딩=members + subscriptions.source=seed';
+COMMENT ON COLUMN cohort_members.cohort_id IS '소속 코호트(FK)';
+COMMENT ON COLUMN cohort_members.user_id   IS '멤버(FK users)';
+COMMENT ON COLUMN cohort_members.joined_at IS '합류 시각';
+
+-- referral_codes / referrals / rewards (ADR 0006) -----------------
+COMMENT ON TABLE  referral_codes           IS '추천 코드(1인 1코드, user_id UNIQUE). 입소문 추적 (ADR 0006)';
+COMMENT ON COLUMN referral_codes.user_id   IS '코드 소유자=추천인(FK users)';
+COMMENT ON COLUMN referral_codes.code      IS '추천 코드(UNIQUE, 예: BRO-XXXX)';
+COMMENT ON COLUMN referral_codes.is_active IS '코드 활성 여부';
+
+COMMENT ON TABLE  referrals                      IS '추천 귀속. referred_user_id UNIQUE=피추천자 1건만(중복/자기추천 차단) (ADR 0006)';
+COMMENT ON COLUMN referrals.code_id              IS '사용된 추천 코드(FK referral_codes)';
+COMMENT ON COLUMN referrals.referrer_user_id     IS '추천한 사람(FK users)';
+COMMENT ON COLUMN referrals.referred_user_id     IS '추천받아 가입한 사람(FK users). 가입 전이면 NULL';
+COMMENT ON COLUMN referrals.status               IS '추천 단계(referral_status)';
+COMMENT ON COLUMN referrals.converted_payment_id IS '유료 전환 결제(FK payments). CAC 귀속 기준';
+
+COMMENT ON TABLE  rewards             IS '추천 보상(비현금: 연장/할인). ADR 0006: 현금 보상 금지(학부모 정서 리스크)';
+COMMENT ON COLUMN rewards.user_id     IS '보상 수령자(FK users)';
+COMMENT ON COLUMN rewards.referral_id IS '보상 발생 추천(FK referrals)';
+COMMENT ON COLUMN rewards.kind        IS '보상 종류(reward_kind)';
+COMMENT ON COLUMN rewards.status      IS '보상 상태(reward_status)';
+COMMENT ON COLUMN rewards.amount      IS 'sub_extension=연장 일수 / discount=할인액(원). NULL 허용';
+COMMENT ON COLUMN rewards.note        IS '보상 메모';
+COMMENT ON COLUMN rewards.granted_at  IS '지급 시각';
+COMMENT ON COLUMN rewards.redeemed_at IS '사용(적용) 시각';
+
+-- events (ADR 0006) -----------------------------------------------
+COMMENT ON TABLE  events             IS '활성화/퍼널/CAC 측정 원천(Data 렌즈). 유연 이벤트 로그 (ADR 0006)';
+COMMENT ON COLUMN events.user_id     IS '주체(FK users). 익명(가입 전)이면 NULL';
+COMMENT ON COLUMN events.type        IS '이벤트 종류: activation_first_lecture/referral_click/referral_signup/paid_conversion/review_submitted ...';
+COMMENT ON COLUMN events.ref_table   IS '관련 엔터티 종류(referral/offer/cohort/lecture)';
+COMMENT ON COLUMN events.ref_id      IS '관련 엔터티 id';
+COMMENT ON COLUMN events.props       IS '부가 속성 JSONB';
+COMMENT ON COLUMN events.occurred_at IS '이벤트 발생 시각';
+
 COMMIT;
 
 -- ================================================================
