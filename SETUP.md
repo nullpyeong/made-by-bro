@@ -32,19 +32,21 @@ DATABASE_URL="postgresql://madebybro:madebybro@localhost:5432/madebybro?schema=p
 
 ## 1. 백엔드 — NestJS (`apps/api`)
 
-```bash
-# 레포 루트에서
-cd apps
-npx @nestjs/cli new api --skip-git --package-manager pnpm
-#  → 이미 api 폴더가 있으니, 물어보면 덮어쓰기 허용 또는 임시폴더 생성 후 내용 이동
+`apps/api`는 **이미 스캐폴딩되어 있다**(NestJS + Prisma, 소스만 커밋·node_modules 제외).
+본인 PC에서 설치만 하면 된다:
 
-# 자주 쓰는 패키지
-cd api
-pnpm add @nestjs/config @nestjs/jwt @nestjs/passport passport passport-jwt
-pnpm add prisma @prisma/client
-pnpm add argon2 class-validator class-transformer
-pnpm dlx prisma init        # prisma/schema.prisma 생성 → design-docs/schema.sql 참고해 모델 작성
+```bash
+cd apps/api
+cp .env.example .env            # DATABASE_URL 확인 (위 Docker DB 기준)
+pnpm install
+pnpm prisma:generate            # prisma/schema.prisma → @prisma/client
+pnpm start:dev                  # http://localhost:3000/api  (확인: GET /api/health)
 ```
+
+> Prisma 모델은 `design-docs/schema.sql`(SSOT)을 introspection 한 산출물이다.
+> 스키마 변경 시: schema.sql 수정 → DB 적용 → `pnpm prisma:pull` → `pnpm prisma:generate`.
+> 인증/결제 등 추가 패키지(`@nestjs/jwt`, `passport`, `argon2`, `class-validator` 등)는
+> 해당 모듈 구현 시 `pnpm add` 로 붙인다.
 
 ## 2. 프론트 — React + Vite (`apps/web`)
 
